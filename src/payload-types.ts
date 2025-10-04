@@ -79,6 +79,20 @@ export interface Media {
   focalX?: number | null;
   focalY?: number | null;
 }
+
+export interface Category {
+  id: string;
+  name: string;
+  subcategories?: {
+    docs: Category[];
+  };
+  parent?: {
+    relationTo: 'categories';
+    value: string | Category;
+  } | null;
+  updatedAt: string;
+  createdAt: string;
+}
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-preferences".

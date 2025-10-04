@@ -1,15 +1,47 @@
+import configPromise from '@payload-config'
+import { getPayload } from 'payload'
+import { Category } from '~/payload-types'
+
 import { Footer } from './footer/page'
 import { Navbar } from './Navbar'
+import { SearchFilter } from './search-filter'
 
 interface Props {
   children: React.ReactNode
 }
 
-const Layout = ({ children }: Props) => {
+const Layout = async ({ children }: Props) => {
+  const payload = await getPayload({
+    config: configPromise
+  })
+
+  const data = await payload.find({
+    collection: 'categories',
+    depth: 1, // Populate subcategories, subcategories.[0] will be a type of 'Category'
+    pagination: false,
+    where: {
+      parent: {
+        exists: false
+      }
+    }
+  })
+
+  const formattedData = data.docs.map((doc) => ({
+    ...doc,
+    subcategories: (doc.subcategories?.docs ?? []).map((doc) => ({
+      // Because of 'depth: 1' we are confident doc will be a type of 'Category'
+      ...(doc as Category),
+      subcategories: undefined
+    }))
+  }))
+
+  console.log(data)
+
   return ( 
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      <div className='flex justify-center'>
+      <SearchFilter data={data} />
+      <div className='flex-1 justify-center bg-[#f4f4f0]'>
         {children}
       </div>
       <Footer />
