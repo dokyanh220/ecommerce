@@ -5,6 +5,8 @@ import { useRef, useState } from 'react'
 import { cn } from '~/lib/utils'
 import { Button } from '~/components/ui/button'
 import { Category } from '~/payload-types'
+import { useDropdownPostion } from './use-dropdown-postion'
+import { SubcategoryMenu } from './subcategoryMenu'
 
 interface Props {
   category: Category,
@@ -22,12 +24,15 @@ export const CategoryDropDown = ({
 
   const onMouseEnter = () => {
     if (category.subcategories) {
-      console.log('hello')
       setIsOpen(true)
     }
   }
 
   const onMouseLeave = () => setIsOpen(false)
+
+  const { getDropdownPosition } = useDropdownPostion(dropdownRef)
+
+  const dropdownPosition = getDropdownPosition()
 
   return (
     <div
@@ -40,21 +45,28 @@ export const CategoryDropDown = ({
         <Button
           variant='elevated'
           className={cn(
-            'h-11 px-4 rounded-full bg-transparent border border-transparent text-black hover:border-primary hover:bg-white',
+            'h-11 px-4 rounded-full bg-transparent border border-transparent text-black hover:border-primary hover:bg-white z-50',
             isActive && isNavigationHovered && 'bg-white border-primary'
           )}
         >
           {category.name}
         </Button>
+        {/* Nếu categories.length > 0 thì mới hiện dropdown */}
         {category.subcategories && category.subcategories.length > 0 && (
           <div
             className={cn(
               'opacity-0 absolute -bottom-3 w-0 h-0 border-l-[10px] border-r-[10px] border-b-[10px] border-l-transparent border-r-transparent border-b-black left-1/2 -translate-x-1/2',
-              isOpen && 'opacity-100'
+              isOpen && 'opacity-100' 
             )}
           />
         )}
       </div>
+
+      <SubcategoryMenu
+        category={category}
+        isOpen={isOpen}
+        position={dropdownPosition}
+      />
     </div>
   )
 }
