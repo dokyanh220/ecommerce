@@ -6,7 +6,7 @@ interface Props {
 }
 
 export const Categories = ({ data }: Props) => {
-  return (
+  return (  
     <div>
      {data.map((category:  Category) => (
         <div key={category.id} >
