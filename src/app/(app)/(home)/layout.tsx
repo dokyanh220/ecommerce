@@ -1,6 +1,5 @@
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
-import { Category } from '~/payload-types'
 
 import { Footer } from './footer/page'
 import { Navbar } from './Navbar'
@@ -24,7 +23,8 @@ const Layout = async ({ children }: Props) => {
       parent: {
         exists: false
       }
-    }
+    },
+    sort: 'name'
   })
 
   const formattedData = data.docs.map((doc) => ({
