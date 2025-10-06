@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { CategoryDropDown } from './categoryDropDown'
 import { CustomCategory } from '../types'
+import { Button } from '~/components/ui/button'
+import { ListFilterIcon } from 'lucide-react'
+import { cn } from '~/lib/utils'
 
 interface Props {
   data: CustomCategory[]
@@ -16,6 +19,7 @@ export const Categories = ({ data }: Props) => {
   // visibleCount là số lượng category hiển thị được theo chiều rộng của container, mặc định là hiển thị tất cả các category
   // nếu `containerRef.current`, `viewAllRef.current` và `measureRef.current` khác null thì tính toán lại visibleCount
   const [visibleCount, setVisibleCount] = useState(data.length)
+  // Theo dõi category được hover
   const [isAnyHovered, setIsAnyHovered] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
@@ -40,20 +44,22 @@ export const Categories = ({ data }: Props) => {
       const containerWidth = containerRef.current.offsetWidth
       // Chiều rộng của button "View All"
       const viewAllWidth = viewAllRef.current.offsetWidth
-      // avalibleWidth là chiều rộng còn lại sau khi trừ đi chiều rộng của button "View All"
-      const avalibleWidth = containerWidth - viewAllWidth
+      // availableWidth là chiều rộng còn lại sau khi trừ đi chiều rộng của button "View All"
+      const availableWidth = containerWidth - viewAllWidth
 
       const items = Array.from(measureRef.current.children)
-      // Tính toán số lượng category có thể hiển thị được trong chiều rộng avalibleWidth
+      // Tính toán số lượng category có thể hiển thị được trong chiều rộng availableWidth
       let totalWidth = 0
       let visible = 0
 
+      // Đếm số item hiển thị vừa với container
       for (const item of items) {
-        const itemWidth = item.getBoundingClientRect().width
+        const width = item.getBoundingClientRect().width
 
-        // Nếu tổng của các button <= avalibleWidth, break
-        if (totalWidth + itemWidth <= avalibleWidth) break
-        totalWidth += itemWidth
+        
+        // Nếu thêm item này vào sẽ vượt quá availableWidth thì dừng
+        if (totalWidth + width > availableWidth) break
+        totalWidth += width
         visible++
       }
 
@@ -70,18 +76,58 @@ export const Categories = ({ data }: Props) => {
    
   return (  
     <div className='relative w-full'>
+      {/* Categories sidebar */}
 
-     <div className='flex flex-nowrap items-center'>
-       {data.map((category) => (
-          <div key={category.id} >
-            <CategoryDropDown
-              category={category}
-              isActive={activeCategory === category.slug} // isActive cho biét category nào đang được chọn
-              isNavigationHovered={false}
-            />
-          </div>
-       ))}
-     </div>
+      {/* Ẩn category container không chứa đủ */}
+      <div
+        ref={measureRef}
+        className='absolute opacity-0 pointer-events-none flex'
+        style={{ position: 'fixed', top: -9999, left: -9999 }}
+      >
+        {data.map((category) => (
+            <div key={category.id} >
+              <CategoryDropDown
+                category={category}
+                isActive={activeCategory === category.slug}
+                isNavigationHovered={false}
+              />
+            </div>
+        ))}
+      </div>
+
+      {/* Visible items */}
+      <div
+        ref={containerRef}
+        className='flex flex-nowrap items-center'
+        onMouseEnter={() => setIsAnyHovered(true)}
+        onMouseLeave={() => setIsAnyHovered(false)}
+      >
+        {data.slice(0, visibleCount).map((category) => (
+            <div key={category.id} >
+              <CategoryDropDown
+                category={category}
+                isActive={activeCategory === category.slug} // isActive cho biét category nào đang được chọn
+                isNavigationHovered={isAnyHovered}
+              />
+            </div>
+        ))}
+
+        {/* Nhật ký: để nút view all bên ngoài để rồi viewAllRef === containerRef mò lòi lol */}
+        <div
+          className='shrink-0'
+          ref={viewAllRef}
+        >
+          <Button
+            className={cn(
+              'h-11 px-4 rounded-full bg-transparent border border-transparent text-black hover:border-primary hover:bg-white z-50',
+              isActiveCategoryHidden && !isAnyHovered && 'bg-white border-primary'
+            )}
+          >
+            View all
+            <ListFilterIcon className='ml-2' />
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }
