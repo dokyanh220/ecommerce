@@ -5,6 +5,7 @@ import { Category } from '~/payload-types'
 import { Footer } from './footer/page'
 import { Navbar } from './Navbar'
 import { SearchFilter } from './search-filter'
+import { CustomCategory } from './types'
 
 interface Props {
   children: React.ReactNode
@@ -30,7 +31,7 @@ const Layout = async ({ children }: Props) => {
     ...doc,
     subcategories: (doc.subcategories?.docs ?? []).map((doc) => ({
       // Because of 'depth: 1' we are confident doc will be a type of 'Category'
-      ...(doc as Category),
+      ...(doc as CustomCategory),
       subcategories: undefined
     }))
   }))
