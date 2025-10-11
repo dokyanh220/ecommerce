@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { CategoryDropDown } from './categoryDropDown'
 import { CustomCategory } from '../types'
+import { CategorySidebar } from './categorySidebar'
 import { Button } from '~/components/ui/button'
 import { ListFilterIcon } from 'lucide-react'
 import { cn } from '~/lib/utils'
@@ -77,6 +78,9 @@ export const Categories = ({ data }: Props) => {
   return (  
     <div className='relative w-full'>
       {/* Categories sidebar */}
+      {isSidebarOpen && (
+        <CategorySidebar open={isSidebarOpen} onOpenChange={setIsSidebarOpen} data={data} />
+      )}
 
       {/* Ẩn category container không chứa đủ */}
       <div
@@ -122,6 +126,7 @@ export const Categories = ({ data }: Props) => {
               'h-11 px-4 rounded-full bg-transparent border border-transparent text-black hover:border-primary hover:bg-white z-50',
               isActiveCategoryHidden && !isAnyHovered && 'bg-white border-primary'
             )}
+            onClick={() => setIsSidebarOpen(true)}
           >
             View all
             <ListFilterIcon className='ml-2' />
