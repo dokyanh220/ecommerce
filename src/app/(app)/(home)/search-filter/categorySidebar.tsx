@@ -18,7 +18,9 @@ export const CategorySidebar = ({
 }: Props) => {
   const router = useRouter()
 
+  // parentCategories là các danh mục con của danh mục cha được chọn
   const [parentCategories, setParentCategories] = useState<CustomCategory[] | null>(null)
+  // selectedCategory là danh mục cha được chọn
   const [selectedCategory, setSelectedCategory] = useState<CustomCategory | null>(null)
 
   // Nếu có danh mục cha, hiển thị danh mục con [parentCategory.children]

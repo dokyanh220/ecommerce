@@ -94,7 +94,7 @@ export const Navbar = () => {
           variant='secondary'
           className='border-l border-t-0 border-r-0 px-12 h-full rounded-none bg-black text-white hover:bg-pink-400 transition-colors text-lg'
         >
-          <Link href='sign-up'>
+          <Link href='/sign-up'>
             Bắt đầu ngay
           </Link>
         </Button>

@@ -7,6 +7,7 @@ import { Button } from '~/components/ui/button'
 import { useDropdownPostion } from './use-dropdown-postion'
 import { SubcategoryMenu } from './subcategoryMenu'
 import { CustomCategory } from '../types'
+import Link from 'next/link'
 
 interface Props {
   category: CustomCategory,
@@ -34,15 +35,24 @@ export const CategoryDropDown = ({
 
   const dropdownPosition = getDropdownPosition()
 
+  // Hàm để bật tắt dropdown khi click vào button
+  // const toggleDropdown = () => {
+  //   if (category.subcategories?.docs?.length) {
+  //     setIsOpen(!isOpen)
+  //   }
+  // }
+
   return (
     <div
       className='relative'
       ref={dropdownRef}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
+      // onClick={toggleDropdown}
     >
       <div className='relative'>
         <Button
+          asChild
           variant='elevated'
           className={cn(
             'h-11 px-4 rounded-full bg-transparent border border-transparent text-black hover:border-primary hover:bg-white z-50',
@@ -50,7 +60,9 @@ export const CategoryDropDown = ({
             isOpen && 'bg-white border-primary shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] -translate-y-1 transition-all'
           )}
         >
-          {category.name}
+          <Link href={`/${category.slug === 'all' ? '' : category.slug}`}>
+            {category.name}
+          </Link>
         </Button>
         {/* Nếu categories.length > 0 thì mới hiện dropdown */}
         {category.subcategories && category.subcategories.length > 0 && (
