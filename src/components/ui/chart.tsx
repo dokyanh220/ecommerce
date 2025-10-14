@@ -13,8 +13,8 @@ export type ChartConfig = {
     label?: React.ReactNode
     icon?: React.ComponentType
   } & (
-    | { color?: string; theme?: never }
-    | { color?: never; theme: Record<keyof typeof THEMES, string> }
+    | { color?: string theme?: never }
+    | { color?: never theme: Record<keyof typeof THEMES, string> }
   )
 }
 
@@ -69,7 +69,7 @@ function ChartContainer({
   )
 }
 
-const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
+const ChartStyle = ({ id, config }: { id: string config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
     ([, config]) => config.theme || config.color
   )
@@ -90,7 +90,7 @@ ${colorConfig
     const color =
       itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
       itemConfig.color
-    return color ? `  --color-${key}: ${color};` : null
+    return color ? `  --color-${key}: ${color}` : null
   })
   .join("\n")}
 }

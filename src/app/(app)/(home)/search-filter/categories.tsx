@@ -2,17 +2,21 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { CategoryDropDown } from './categoryDropDown'
-import { CustomCategory } from '../types'
 import { CategorySidebar } from './categorySidebar'
 import { Button } from '~/components/ui/button'
 import { ListFilterIcon } from 'lucide-react'
 import { cn } from '~/lib/utils'
+import { useTRPC } from '~/trpc/client'
+import { useSuspenseQuery } from '@tanstack/react-query'
 
-interface Props {
-  data: CustomCategory[]
-}
+// interface Props {
+//   data: CustomCategory[]
+// }
 
-export const Categories = ({ data }: Props) => {
+export const Categories = () => {
+  const trpc = useTRPC()
+  const { data } = useSuspenseQuery(trpc.categories.getMany.queryOptions())
+
   const containerRef = useRef<HTMLDivElement>(null)
   const measureRef = useRef<HTMLDivElement>(null)
   const viewAllRef = useRef<HTMLDivElement>(null)
@@ -79,7 +83,7 @@ export const Categories = ({ data }: Props) => {
     <div className='relative w-full'>
       {/* Categories sidebar */}
       {isSidebarOpen && (
-        <CategorySidebar open={isSidebarOpen} onOpenChange={setIsSidebarOpen} data={data} />
+        <CategorySidebar open={isSidebarOpen} onOpenChange={setIsSidebarOpen} />
       )}
 
       {/* Ẩn category container không chứa đủ */}

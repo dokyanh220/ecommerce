@@ -8,6 +8,7 @@ export default function Home () {
   const trpc = useTRPC()
   // Sử dụng hook useQuery để gọi procedure getMany trong categories router, query options được lấy từ server
   const categories = useQuery(trpc.categories.getMany.queryOptions())
+  
   return (
     <div>
       <p>is loading: {`${categories.isLoading}`} </p>

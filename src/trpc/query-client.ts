@@ -1,8 +1,8 @@
 import {
   defaultShouldDehydrateQuery,
   QueryClient,
-} from '@tanstack/react-query';
-// import superjson from 'superjson';
+} from '@tanstack/react-query'
+// import superjson from 'superjson'
 
 // Hàm này để khởi tạo queryClient
 export function makeQueryClient() {
@@ -21,5 +21,5 @@ export function makeQueryClient() {
         // deserializeData: superjson.deserialize,
       },
     },
-  });
+  })
 }

@@ -1,48 +1,39 @@
-import configPromise from '@payload-config'
-import { getPayload } from 'payload'
-
 import { Footer } from './footer/page'
 import { Navbar } from './Navbar'
-import { SearchFilter } from './search-filter'
-import { CustomCategory } from './types'
+import { SearchFilter, SearchFilterLoading } from './search-filter'
+import { getQueryClient, trpc } from '~/trpc/server'
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
+import { Suspense } from 'react'
 
+// Định nghĩa kiểu props cho component Layout
 interface Props {
-  children: React.ReactNode
+  children: React.ReactNode // Các component con sẽ được render bên trong layout
 }
 
+// Component Layout chính - server component để fetch dữ liệu từ PayloadCMS
 const Layout = async ({ children }: Props) => {
-  const payload = await getPayload({
-    config: configPromise
-  })
-
-  const data = await payload.find({
-    collection: 'categories',
-    depth: 1, // Populate subcategories, subcategories.[0] will be a type of 'Category'
-    pagination: false,
-    where: {
-      parent: {
-        exists: false
-      }
-    },
-    sort: 'name'
-  })
-
-  const formattedData = data.docs.map((doc) => ({
-    ...doc,
-    subcategories: (doc.subcategories?.docs ?? []).map((doc) => ({
-      // Because of 'depth: 1' we are confident doc will be a type of 'Category'
-      ...(doc as CustomCategory),
-      subcategories: undefined
-    }))
-  }))
+  const queryClient = getQueryClient()
+  void queryClient.prefetchQuery(
+    trpc.categories.getMany.queryOptions()
+  );
 
   return ( 
     <div className="flex flex-col min-h-screen">
+      {/* Header navigation với logo và menu */}
       <Navbar />
-      <SearchFilter data={formattedData} />
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <Suspense fallback={<SearchFilterLoading />}>
+          {/* Thanh tìm kiếm và bộ lọc danh mục */}
+          <SearchFilter />
+        </Suspense>
+      </HydrationBoundary>
+      
+      {/* Nội dung chính - flex-1 để chiếm toàn bộ không gian còn lại */}
       <div className='flex-1 justify-center bg-[#f4f4f0]'>
-        {children}
+        {children} {/* Render các trang con như home, about, contact... */}
       </div>
+      
+      {/* Footer chứa thông tin liên hệ và links */}
       <Footer />
     </div>
   )
