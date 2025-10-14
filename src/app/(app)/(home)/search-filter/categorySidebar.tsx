@@ -1,27 +1,32 @@
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '~/components/ui/sheet';
-import { CustomCategory } from '../types'
-import { useState } from 'react';
-import { ScrollArea } from '@radix-ui/react-scroll-area';
-import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '~/components/ui/sheet'
+import { useState } from 'react'
+import { ScrollArea } from '@radix-ui/react-scroll-area'
+import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useTRPC } from '~/trpc/client'
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { CategoriesGetManyOutput } from '~/modules/categories/types'
 
 interface Props {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  data: CustomCategory[]
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  // data: CustomCategory[]
 }
 
 export const CategorySidebar = ({
   open,
   onOpenChange,
-  data
+  // data
 }: Props) => {
+  const trpc = useTRPC()
+  const { data } = useSuspenseQuery(trpc.categories.getMany.queryOptions())
+
   const router = useRouter()
 
   // parentCategories là các danh mục con của danh mục cha được chọn
-  const [parentCategories, setParentCategories] = useState<CustomCategory[] | null>(null)
+  const [parentCategories, setParentCategories] = useState<CategoriesGetManyOutput | null>(null)
   // selectedCategory là danh mục cha được chọn
-  const [selectedCategory, setSelectedCategory] = useState<CustomCategory | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<CategoriesGetManyOutput[1] | null>(null)
 
   // Nếu có danh mục cha, hiển thị danh mục con [parentCategory.children]
   // Nếu không có danh mục cha, hiển thị danh mục gốc [data]
@@ -33,11 +38,11 @@ export const CategorySidebar = ({
     onOpenChange(open)
   }
 
-  const handleCategoryClick = (category: CustomCategory) => {
+  const handleCategoryClick = (category: CategoriesGetManyOutput[1]) => {
     // Nếu category có subcategories thì mở danh mục con
     if (category.subcategories && category.subcategories.length > 0) {
       // as CustomCategory[] vì subcategories có thể là undefined
-      setParentCategories(category.subcategories as CustomCategory[])
+      setParentCategories(category.subcategories as CategoriesGetManyOutput)
       setSelectedCategory(category)
     } else {
       // Đây là category con, chuyển hướng tới trang category
