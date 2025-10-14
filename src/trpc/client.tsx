@@ -2,18 +2,20 @@
 // ^-- Đảm bảo file chạy phía client để dùng React hook
 import type { QueryClient } from '@tanstack/react-query';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { httpBatchLink } from '@trpc/client';
+import { createTRPCClient, httpBatchLink } from '@trpc/client';
 import { createTRPCReact } from '@trpc/react-query';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { makeQueryClient } from './query-client';
 import type { AppRouter } from './routers/_app';
+import { createTRPCContext } from '@trpc/tanstack-react-query';
 
-// Tạo instance trpc để tái sử dụng khắp ứng dụng
-export const trpc = createTRPCReact<AppRouter>();
+// Tạo context cho tRPC
+export const { TRPCProvider, useTRPC } = createTRPCContext<AppRouter>();
 
 let browserQueryClient: QueryClient;
 
+// Hàm khởi tạo QueryClient, phân biệt server và client
 function getQueryClient() {
   if (typeof window === 'undefined') {
     // Server: tạo query client mới cho mỗi request để tránh chia sẻ state
@@ -24,18 +26,22 @@ function getQueryClient() {
   return browserQueryClient;
 }
 
+// Hàm hỗ trợ trong server-side để lấy query options từ tRPC
 function getUrl() {
   const base = typeof window === 'undefined' ? process.env.NEXT_PUBLIC_APP_URL : '';
   return `${base ?? ''}/api/trpc`;
 }
 
-type TRPCReactProviderProps = Readonly<{ children: ReactNode }>;
-
-export function TRPCReactProvider({ children }: TRPCReactProviderProps) {
+// Provider component để bọc ứng dụng, cung cấp context cho React Query và tRPC
+export function TRPCReactProvider(
+  props: Readonly<{
+    children: React.ReactNode;
+  }>,
+) {
   // Khởi tạo client một lần giúp React Query và tRPC chia sẻ cache hiệu quả
   const queryClient = getQueryClient();
   const [trpcClient] = useState(() =>
-    trpc.createClient({
+    createTRPCClient<AppRouter>({
       links: [
         httpBatchLink({
           // transformer: superjson, <-- bật khi cần serialization nâng cao
@@ -46,8 +52,10 @@ export function TRPCReactProvider({ children }: TRPCReactProviderProps) {
   );
 
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </trpc.Provider>
+    <QueryClientProvider client={queryClient}>
+      <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+        {props.children}
+      </TRPCProvider>
+    </QueryClientProvider>
   );
 }
