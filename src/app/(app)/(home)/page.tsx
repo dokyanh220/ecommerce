@@ -10,8 +10,8 @@ export default function Home () {
   
   return (
     <div>
-      <h1>Home page</h1>
-      {JSON.stringify(data, null, 2)}
+      <p>Home page</p>
+      {JSON.stringify(data?.user, null, 2)}
     </div>
   )
 }
