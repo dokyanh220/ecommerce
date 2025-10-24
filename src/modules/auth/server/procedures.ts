@@ -36,27 +36,103 @@ export const authRouter = createTRPCRouter({
   register: baseProcedure
     .input(registerSchema)
     .mutation(async ({ input, ctx }) => {
-      // existingData: Kiểm tra xem username đã tồn tại trong DB chưa
-      const existingData = await ctx.db.find({
-        collection: 'users',
-        limit: 1,
-        where: {
-          username: {
-            equals: input.username
-          }
+      // Cách 1
+      // Kiểm tra xem username đã tồn tại chưa
+      // const existingData = await ctx.db.find({
+      //   collection: 'users',
+      //   limit: 1,
+      //   where: {
+      //     username: {
+      //       equals: input.username
+      //     }
+      //   }
+      // })
+
+      // Kiểm tra email tồn tại chưa
+      // const email = await ctx.db.find({
+      //   collection: 'users',
+      //   where: {
+      //     email: { equals: input.email }
+      //   },
+      //   limit: 1
+      // })
+
+      // Kiểm tra phone tồn tại chưa
+      // const phone = await ctx.db.find({
+      //   collection: 'users',
+      //   where: {
+      //     phone: { equals: input.email }
+      //   },
+      //   limit: 1
+      // })
+
+      // Cách 2
+      // // Gộp đối tượng kiểm tra vào mảng
+      // const [userByUsername, userByEmail, userByPhone] = await Promise.all([
+      //   ctx.db.find({
+      //     collection: 'users',
+      //     where: { username: { equals: input.username } },
+      //     limit: 1,
+      //   }),
+      //   ctx.db.find({
+      //     collection: 'users',
+      //     where: { email: { equals: input.email } },
+      //     limit: 1,
+      //   }),
+      //   ctx.db.find({
+      //     collection: 'users',
+      //     where: { phone: { equals: input.phone } },
+      //     limit: 1,
+      //   }),
+      // ]);
+
+      // // Kiểm tra từng đối tượng có tồn tại
+      // if (userByUsername.docs?.[0]) {
+      //   throw new TRPCError({
+      //     code: 'BAD_REQUEST',
+      //     message: 'Username already taken',
+      //   });
+      // }
+
+      // if (userByEmail.docs?.[0]) {
+      //   throw new TRPCError({
+      //     code: 'BAD_REQUEST',
+      //     message: 'Email already taken',
+      //   });
+      // }
+
+      // if (userByPhone.docs?.[0]) {
+      //   throw new TRPCError({
+      //     code: 'BAD_REQUEST',
+      //     message: 'Phone already taken',
+      //   });
+      // }
+
+      // Cách 3
+      const checks: { field: keyof typeof input; message: string }[] = [
+        { field: 'username', message: 'Username already taken' },
+        { field: 'email', message: 'Email already taken' },
+        { field: 'phone', message: 'Phone already taken' },
+      ]
+
+      const results = await Promise.all(
+        checks.map(({ field }) =>
+          ctx.db.find({
+            collection: 'users',
+            where: { [field]: { equals: input[field] } },
+            limit: 1,
+          })
+        )
+      )
+
+      results.forEach((res, i) => {
+        if (res.docs?.[0]) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: checks[i].message,
+          })
         }
       })
-
-      // Lấy user đầu tiên từ kết quả tìm kiếm
-      const existingUser = existingData.docs[0]
-
-      // Nếu đã tồn tại user với username này thì báo lỗi
-      if (existingUser) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Username already taken'
-        })
-      }
 
       // Tạo user mới trong collection 'users' của PayloadCMS
       // PayloadCMS sẽ tự động hash(băm) password và validate dữ liệu
@@ -77,6 +153,23 @@ export const authRouter = createTRPCRouter({
   login: baseProcedure
     .input(loginSchema)
     .mutation(async ({ input, ctx }) => {
+      // Kiểm tra email tồn tại
+      const users = await ctx.db.find({
+        collection: 'users',
+        where: {
+          email: { equals: input.email }
+        },
+        limit: 1
+      })
+
+      if (!users?.docs?.length) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: "Email or password doesn't correct"
+        })
+      }
+
+      // Thực hiện login
       // Gọi method login của PayloadCMS để xác thực user
       // PayloadCMS sẽ so sánh email/password với dữ liệu trong DB
       const data = await ctx.db.login({
