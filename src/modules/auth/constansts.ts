@@ -1,1 +1,1 @@
-export const AUTH_COOKIE = 'ttshop-payload-token'
+export const AUTH_COOKIE = 'payload-token'

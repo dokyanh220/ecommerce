@@ -33,6 +33,8 @@ import {
   CommandInput,
   CommandItem
 } from '~/components/ui/command'
+import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -49,8 +51,34 @@ const countryCodes = [
 ]
 
 export const SignUpView = () => {
+  const router = useRouter()
   const trpc = useTRPC()
-  const register = useMutation(trpc.auth.register.mutationOptions())
+  // Helper chuẩn hóa thông điệp lỗi (tRPC/Zod có thể trả mảng JSON)
+  const extractErrorMessage = (raw: string) => {
+    try {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed) && parsed[0]?.message) return parsed[0].message as string
+    } catch {/* không phải JSON */}
+    return raw
+  }
+
+  // Mutation đăng ký 
+  const registerMutation = useMutation(
+    trpc.auth.register.mutationOptions({
+      onSuccess: () => {
+        toast.success('Create account successfully!')
+        // form.reset()
+        router.push('/')
+      },
+      onError: (error) => {
+        let msg = extractErrorMessage(error.message)
+        if (msg.toLowerCase().includes('username already taken')) {
+          msg = 'Username is existed'
+        }
+        toast.error(msg)
+      }
+    })
+  )
 
   const [selectedCode, setSelectedCode] = useState("+84")
   const [openPopover, setOpenPopover] = useState(false)
@@ -82,17 +110,19 @@ export const SignUpView = () => {
   }
 
   const onSubmit = (values: z.infer<typeof registerSchema>) => {
-    console.log(values)
     // data mẫu:
     // {
     //   email: "user@example.com",
     //   username: "myusername", 
-    //   phone: "+84 90 123 4567", // Formatted
+    //   phone: "901234567",
     //   phoneE164: "+84901234567", // For database
-    //   countryCode: "+84",
-    //   countryISO: "VN",
+    //   countryCode: "+84", // For database
+    //   countryISO: "VN", // For database
     //   password: "mypassword"
     // }
+    // Chặn submit trong lúc đang pending (tránh double click)
+    if (registerMutation.isPending) return
+    registerMutation.mutate(values)
   }
 
   const username = form.watch('username')
@@ -187,11 +217,7 @@ export const SignUpView = () => {
                               {countryCodes.map((c) => (
                                 <CommandItem
                                   key={c.code}
-                                  onSelect={() => {
-                                    setSelectedCode(c.code)
-                                    setOpenPopover(false)
-                                    handleCountrySelect(c.code)
-                                  }}
+                                  onSelect={() => {handleCountrySelect(c.code)}}
                                 >
                                   <span>{c.name}</span>
                                   <span className="ml-auto text-muted-foreground">{c.code}</span>
@@ -206,6 +232,10 @@ export const SignUpView = () => {
                         {...field}
                         type="tel"
                         className="rounded-l-none"
+                        onChange={e => {
+                          const digitsOnly = e.target.value.replace(/\D/g, "");
+                          field.onChange(digitsOnly);
+                        }}
                       />
                     </div>
                   </FormControl>
@@ -251,12 +281,13 @@ export const SignUpView = () => {
             />
 
             <Button
+              disabled={registerMutation.isPending}
               type='submit'
               size='lg'
               variant='elevated'
-              className='bg-black text-white hover:bg-pink-400'
+              className='bg-black text-white hover:bg-pink-400 disabled:opacity-60 disabled:pointer-events-none'
             >
-              Create account
+              {registerMutation.isPending ? 'Creating…' : 'Create account'}
             </Button>
           </form>
         </Form>

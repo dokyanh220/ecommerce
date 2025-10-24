@@ -3,7 +3,7 @@ import { headers as getHeaders, cookies as getCookies } from "next/headers"
 import z from "zod"
 import { baseProcedure, createTRPCRouter } from "~/trpc/init"
 import { AUTH_COOKIE } from "../constansts"
-import { registerSchema } from "../schemas"
+import { loginSchema, registerSchema } from "../schemas"
 
 // Tạo auth router để xử lý tất cả các thao tác liên quan đến authentication
 export const authRouter = createTRPCRouter({
@@ -36,6 +36,28 @@ export const authRouter = createTRPCRouter({
   register: baseProcedure
     .input(registerSchema)
     .mutation(async ({ input, ctx }) => {
+      // existingData: Kiểm tra xem username đã tồn tại trong DB chưa
+      const existingData = await ctx.db.find({
+        collection: 'users',
+        limit: 1,
+        where: {
+          username: {
+            equals: input.username
+          }
+        }
+      })
+
+      // Lấy user đầu tiên từ kết quả tìm kiếm
+      const existingUser = existingData.docs[0]
+
+      // Nếu đã tồn tại user với username này thì báo lỗi
+      if (existingUser) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Username already taken'
+        })
+      }
+
       // Tạo user mới trong collection 'users' của PayloadCMS
       // PayloadCMS sẽ tự động hash(băm) password và validate dữ liệu
       await ctx.db.create({
@@ -43,7 +65,8 @@ export const authRouter = createTRPCRouter({
         data: {
           email: input.email,
           password: input.password, // PayloadCMS tự động hash password
-          username: input.username
+          username: input.username,
+          phone: input.phone
         }
       })
       
@@ -52,13 +75,7 @@ export const authRouter = createTRPCRouter({
     }),
 
   login: baseProcedure
-    .input(
-      // Schema validation cho dữ liệu đăng nhập
-      z.object({
-        email: z.string().email(), // Email phải đúng format
-        password: z.string() // Password không cần validate vì đã có trong DB
-      })
-    )
+    .input(loginSchema)
     .mutation(async ({ input, ctx }) => {
       // Gọi method login của PayloadCMS để xác thực user
       // PayloadCMS sẽ so sánh email/password với dữ liệu trong DB

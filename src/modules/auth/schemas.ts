@@ -24,19 +24,20 @@ export const registerSchema = z
       .refine((val) => !val.includes('--'), 'Username cannot contain consecutive hyphens')
       // Tự động chuyển thành chữ thường
       .transform((val) => val.toLowerCase()),
-      phone: z.string()
+    phone: z.string()
       .min(1, "Phone number is required") // Bắt buộc nhập
-      .refine(
-        (value) => {
-          // Loại bỏ spaces và kiểm tra chỉ chứa số
-          const cleaned = value.replace(/\s+/g, "")
-          return /^\d+$/.test(cleaned) && cleaned.length >= 6 && cleaned.length <= 15
-        },
-        "Phone number must contain 6-15 digits only"
-      ),
-    
-      // Thêm field cho country code (ẩn, sẽ được set từ UI)
-      countryCode: z.string().default("+84")
+      .regex(/^\d+$/, "Phone number must contain only digits")
+      .transform((val) => {
+        // Loại bỏ tất cả ký tự không phải số
+        let phone = val.replace(/\D/g, "");
+        // Nếu bắt đầu bằng '84' thì bỏ 2 số đầu
+        if (phone.startsWith("84")) phone = phone.slice(2);
+        // Nếu bắt đầu bằng '0' thì bỏ số đầu
+        if (phone.startsWith("0")) phone = phone.slice(1);
+        return phone;
+      }),
+    // Thêm field cho country code (ẩn, sẽ được set từ UI)
+    countryCode: z.string().default("+84")
   })
   .superRefine((data, ctx) => { // Transform và validate phone number theo từng country
     // Lấy thông tin country
@@ -85,8 +86,8 @@ export const registerSchema = z
     
     return {
       ...data,
-      phone: parsedPhone.formatInternational(), // +84 90 123 4567
-      phoneE164: parsedPhone.number, // +84901234567 (cho đẹp hoặc sau này gửi otp)
+      phone: data.phone, // 901234567
+      // phoneE164: parsedPhone.number, // +84901234567 (cho đẹp hoặc sau này gửi otp)
       countryISO: countryInfo.iso // VN, US, GB...
     }
   })
@@ -103,3 +104,8 @@ function getExampleNumber(countryCode: string): string {
   }
   return examples[countryCode] || "123456789"
 }
+
+export const loginSchema = z.object({
+  email: z.string().email(), // Email phải đúng format
+  password: z.string() // Password không cần validate vì đã có trong DB
+})
