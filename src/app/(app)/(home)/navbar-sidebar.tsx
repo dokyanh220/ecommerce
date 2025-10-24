@@ -32,7 +32,7 @@ export const NavbarSidebar = ({
           <SheetHeader className='p-4 border-b'>
             <div className='flex items-center'>
               <SheetTitle>
-                TikTokShop
+                BizMart
               </SheetTitle>
             </div>
           </SheetHeader>
