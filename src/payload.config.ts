@@ -10,6 +10,7 @@ import sharp from 'sharp'
 import Users from './collections/Users'
 import Media from './collections/Media'
 import Categories from './collections/Categories'
+import EmailVerifications from './collections/EmailVerifications'
 
 
 const filename = fileURLToPath(import.meta.url)
@@ -22,7 +23,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media, Categories],
+  collections: [Users, Media, Categories, EmailVerifications],
   cookiePrefix: 'bizmart',
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

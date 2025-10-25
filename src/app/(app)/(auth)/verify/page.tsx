@@ -1,7 +1,5 @@
-import VerifyOtp from "~/modules/auth/ui/view/verify-otp"
-
 const Page = () => {
-  return <VerifyOtp />
+  return <div>verify</div>
 }
  
 export default Page
