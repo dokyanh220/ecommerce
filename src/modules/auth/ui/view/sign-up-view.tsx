@@ -68,7 +68,7 @@ export const SignUpView = () => {
       onSuccess: () => {
         toast.success('Create account successfully!')
         // form.reset()
-        router.push('/')
+        router.push('/verify')
       },
       onError: (error) => {
         let msg = extractErrorMessage(error.message)
@@ -279,7 +279,6 @@ export const SignUpView = () => {
                 </FormItem>
               )}
             />
-
             <Button
               disabled={registerMutation.isPending}
               type='submit'
