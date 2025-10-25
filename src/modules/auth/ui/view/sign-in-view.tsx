@@ -5,13 +5,12 @@ import { z } from 'zod'
 import { loginSchema } from '../../schemas'
 import { Poppins } from 'next/font/google'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTRPC } from '~/trpc/client'
 import Link from 'next/link' 
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -30,32 +29,23 @@ const poppins = Poppins({
   weight: ['700']
 })
 
+// LOL để ý test đăng nhập sai nhiều payload có khóa mẹ tài khoản đó
 export const SignInView = () => {
   const router = useRouter()
   const trpc = useTRPC()
-  // Helper chuẩn hóa thông điệp lỗi (tRPC/Zod có thể trả mảng JSON)
-  const extractErrorMessage = (raw: string) => {
-    try {
-      const parsed = JSON.parse(raw)
-      if (Array.isArray(parsed) && parsed[0]?.message) return parsed[0].message as string
-    } catch {/* không phải JSON */}
-    return raw
-  }
+  const queryClient = useQueryClient()
 
   // Mutation đăng nhập 
   const loginMutation = useMutation(
     trpc.auth.login.mutationOptions({
-      onSuccess: () => {
+      onSuccess: async () => {
         toast.success('Login successfully!')
         // form.reset()
+        await queryClient.invalidateQueries(trpc.auth.session.queryFilter())
         router.push('/')
       },
       onError: (error) => {
-        let msg = extractErrorMessage(error.message)
-        if (msg.toLowerCase().includes('username already taken')) {
-          msg = 'Username is existed'
-        }
-        toast.error(msg)
+        toast.error(error.message)
       }
     })
   )

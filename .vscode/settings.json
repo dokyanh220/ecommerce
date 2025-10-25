@@ -1,4 +1,5 @@
 {
+  // Chỉ định VSCode dùng TypeScript compiler từ project thay vì trên máy tính
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true
 }

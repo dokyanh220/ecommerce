@@ -1,9 +1,8 @@
 import { TRPCError } from "@trpc/server"
 import { headers as getHeaders, cookies as getCookies } from "next/headers"
-import z from "zod"
 import { baseProcedure, createTRPCRouter } from "~/trpc/init"
-import { AUTH_COOKIE } from "../constansts"
 import { loginSchema, registerSchema } from "../schemas"
+import { generateAuthCookie } from "../utils"
 
 // Tạo auth router để xử lý tất cả các thao tác liên quan đến authentication
 export const authRouter = createTRPCRouter({
@@ -28,9 +27,9 @@ export const authRouter = createTRPCRouter({
     // Lấy cookie store từ Next.js để thao tác với cookies
     const cookie = await getCookies();
     
-    // Xóa AUTH_COOKIE để user bị đăng xuất
+    // Xóa cookie để user bị đăng xuất
     // Sau khi xóa cookie, các request tiếp theo sẽ không có token → user chưa đăng nhập
-    cookie.delete(AUTH_COOKIE)
+    // cookie.delete()
   }),
 
   register: baseProcedure
@@ -145,7 +144,31 @@ export const authRouter = createTRPCRouter({
           phone: input.phone
         }
       })
+
+      // Thực hiện login sau khi register
+      // Gọi method login của PayloadCMS để xác thực user
+      // PayloadCMS sẽ so sánh email/password với dữ liệu trong DB
+      const data = await ctx.db.login({
+        collection: 'users', // Collection chứa user data
+        data: {
+          email: input.email,
+          password: input.password
+        }
+      })
+
+      // Kiểm tra login có thành công không
+      // Nếu thông tin sai, PayloadCMS không trả về token
+      if (!data.token) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED', // HTTP 401 status
+          message: 'Failed to login' // Thông báo lỗi cho client
+        })
+      }
       
+      await generateAuthCookie({
+        prefix: ctx.db.config.cookiePrefix,
+        value: data.token
+      })
       // Không trả về gì - chỉ tạo user thành công
       // Client có thể redirect hoặc hiển thị thông báo thành công
     }),
@@ -189,23 +212,14 @@ export const authRouter = createTRPCRouter({
         })
       }
 
-      // Lưu token vào cookie để maintain session
-      const cookies = await getCookies()
-      cookies.set({
-        name: AUTH_COOKIE, // Tên cookie đã định nghĩa trong constants
-        value: data.token, // JWT token từ PayloadCMS
-        httpOnly: true, // Cookie chỉ truy cập được từ server, không từ JavaScript → bảo mật
-        path: '/' // Cookie có hiệu lực cho toàn bộ website
-        
-        // TODO: Cấu hình cho production environment
-        // sameSite: "none", // Cho phép cross-site requests
-        // domain: "", // Domain cụ thể nếu có subdomain
-        // secure: true, // Chỉ gửi cookie qua HTTPS
-        // maxAge: 60 * 60 * 24 * 7 // Thời gian sống 7 ngày
+      // API: http://localhost:3000/api/users/login
+      
+      await generateAuthCookie({
+        prefix: ctx.db.config.cookiePrefix,
+        value: data.token
       })
-
-      // Trả về thông tin user và token cho client
-      // Client có thể lưu user info vào state/context
-      return data
-    }),
+    // Trả về thông tin user và token cho client
+    // Client có thể lưu user info vào state/context
+    return data
+  })
 })
