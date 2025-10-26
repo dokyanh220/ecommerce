@@ -129,6 +129,7 @@ export interface User {
   id: string;
   username: string;
   phone: string;
+  active: boolean;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -272,6 +273,7 @@ export interface PayloadMigration {
 export interface UsersSelect<T extends boolean = true> {
   username?: T;
   phone?: T;
+  active?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

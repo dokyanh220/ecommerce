@@ -12,16 +12,16 @@ const transporter = nodemailer.createTransport({
 
 export async function sendVerificationEmail(to: string, otp: string) {
   await transporter.sendMail({
-    from: process.env.MAIL_FROM || '"Bizmart" <no-reply@bizmart.local>',
+    from: '"Bizmart" <no-reply@bizmart.local>',
     to,
-    subject: 'Xác thực tài khoản',
+    subject: 'OTP verification',
     html: `
       <div style="font-family:system-ui">
-        <h2>Verify your account</h2>
-        <p>Mã xác thực (OTP) của bạn là:</p>
+        <h2 style="color:#F370FF;">Bizmart OTP</h2>
+        <p>Your code (OTP) is:</p>
         <p style="font-size:26px;letter-spacing:6px;font-weight:700">${otp}</p>
-        <p>Mã hết hạn sau 10 phút.</p>
-        <p>Nếu không phải bạn thực hiện đăng ký, hãy bỏ qua email này.</p>
+        <p>OTP expires after 10 minutes.</p>
+        <p>If you did not register, please ignore this email.</p>
       </div>
     `
   })
