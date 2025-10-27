@@ -109,3 +109,8 @@ export const loginSchema = z.object({
   email: z.string().email(), // Email phải đúng format
   password: z.string() // Password không cần validate vì đã có trong DB
 })
+
+export const verifySchema = z.object({
+  email: z.string().email(),
+  code: z.string().length(6, "OTP must be 6 digits")
+})

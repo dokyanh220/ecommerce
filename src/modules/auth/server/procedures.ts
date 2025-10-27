@@ -1,18 +1,48 @@
 import { TRPCError } from "@trpc/server"
 import { headers as getHeaders, cookies as getCookies } from "next/headers"
 import { baseProcedure, createTRPCRouter } from "~/trpc/init"
-import { loginSchema, registerSchema } from "../schemas"
+import { loginSchema, registerSchema, verifySchema } from "../schemas"
 import { generateAuthCookie } from "../utils"
 import { generateOtp, hashOtp } from "../otp"
 import { sendVerificationEmail } from "../email"
 
-// Biến cấu hình OTP cục bộ, dùng cho register, verifyEmail, resendEmailOtp
+// Biến cấu hình OTP cục bộ, dùng cho register, verifyEmail, resendEmailOtp
 const OTP_EXP_MINUTES = 10
 const MAX_ATTEMPTS = 5
 const RESEND_INTERVAL_SECONDS = 60
 const MAX_RESEND_PER_HOUR = 5
+let currentResendCount = 0
 
-// Helper function - tách logic login chung
+// Helper function: Tạo và gửi email OTP
+async function generateSendEmail(ctx: any, userId: string, email: string, resendCount = 0) {
+  // Tạo OTP mới
+  const otp = generateOtp(6)
+  const codeHash = hashOtp(otp)
+
+  // Tạo record email-verification mới
+  const newRecord = await ctx.db.create({
+    collection: 'email-verifications',
+    data: {
+      user: userId,
+      codeHash,
+      expiresAt: new Date(Date.now() + OTP_EXP_MINUTES * 60 * 1000).toISOString(),
+      attempts: 0,
+      resendCount,
+      lastSentAt: new Date().toISOString(),
+      valid: true
+    }
+  })
+
+  // Gửi email OTP
+  await sendVerificationEmail(email, otp)
+
+  return {
+    recordId: newRecord.id,
+    message: 'OTP sent successfully'
+  }
+}
+
+// Helper function: tách logic login chung
 async function performLogin(ctx: any, email: string, password: string) {
   // Gọi method login của PayloadCMS để xác thực user
   // PayloadCMS sẽ so sánh email/password với dữ liệu trong DB
@@ -103,25 +133,7 @@ export const authRouter = createTRPCRouter({
 
       // Thực hiện tạo OTP từ server gửi đến email user để verify sau đó auto login
       // Tạo OTP
-      const otp = generateOtp(6)
-      const codeHash = hashOtp(otp)
-
-      // Lưu record email-verifications
-      await ctx.db.create({
-        collection: 'email-verifications',
-        data: {
-          user: newUser.id,
-          codeHash, // Mã Otp đã hash
-          expiresAt: new Date(Date.now() + OTP_EXP_MINUTES * 60 * 1000).toISOString(),
-          attempts: 0, // Số lần user nhập sai
-          resendCount: 0, // Số lần gửi lại
-          lastSentAt: new Date().toISOString(), // Thời gian gửi đi
-          valid: true, // Khi các trường hợp vượt giới hạn set false(Otp vô hiệu hóa, resend)
-        }
-      })
-
-      // Gửi email
-      await sendVerificationEmail(input.email, otp)
+      await generateSendEmail(ctx.db, newUser.id, input.email)
 
       // Không login ngay (user chưa active)
       return {
@@ -131,12 +143,7 @@ export const authRouter = createTRPCRouter({
     }),
 
   verifyEmail: baseProcedure
-    .input(
-      // Zod .extend() chỉ mở rộng thêm field chứ không hard cho các lần login sau
-      loginSchema.extend({
-        code: (await import('zod')).z.string().length(6, 'OTP must be 6 digits')
-      })
-    )
+    .input(verifySchema)
     .mutation(async ({ input, ctx }) => {
       const { email, code } = input
 
@@ -172,20 +179,34 @@ export const authRouter = createTRPCRouter({
       // Kiểm tra lần nhập
       // Ban đầu attempts = 0, có thể pass kiểm tra lần đầu sau đó mới thực hiện tăng số lần
       if ((record.attempts || 0) >= MAX_ATTEMPTS) {
-        throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: 'Too many attempts' })
+        await ctx.db.delete({
+          collection: 'email-verifications',
+          id: record.id
+        });
+        throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: 'Too many attempts' });
       }
 
       // So sánh mã
       const ok = hashOtp(code) === record.codeHash
       if (!ok) {
+        const newAttempts = (record.attempts || 0) + 1;
         await ctx.db.update({
           collection: 'email-verifications',
           id: record.id,
           data: {
-            attempts: (record.attempts || 0) + 1
+            attempts: newAttempts
           }
-        })
-        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Incorrect OTP' })
+        });
+        // Nếu sau khi tăng attempts thì đủ 5 lần, xóa record luôn
+        if (newAttempts === MAX_ATTEMPTS) {
+          currentResendCount = record.resendCount || 0
+          await ctx.db.delete({
+            collection: 'email-verifications',
+            id: record.id
+          });
+          throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: 'Too many attempts' });
+        }
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Incorrect OTP' });
       }
 
       // Thành công: cập nhật user + xóa record cho đỡ tốn DB cluster miễn phí
@@ -210,11 +231,7 @@ export const authRouter = createTRPCRouter({
     }),
 
   resendEmailOtp: baseProcedure
-    .input(
-      (await import('zod')).z.object({
-        email: (await import('zod')).z.string().email()
-      })
-    )
+    .input(verifySchema)
     .mutation(async ({input, ctx}) => {
       // Tìm user
       const usersFind = await ctx.db.find({
@@ -224,7 +241,7 @@ export const authRouter = createTRPCRouter({
       })
       const user = usersFind.docs?.[0]
       if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
-      if (user.active) return { message: 'Already verified' }
+      if (user.active) return { message: 'Verified successfully' }
 
       // Lấy record
       const records = await ctx.db.find({
@@ -252,32 +269,15 @@ export const authRouter = createTRPCRouter({
             message: 'Resend limit reached'
           })
         }
-        // Vô hiệu hóa record cũ
-        await ctx.db.update({
+        // Xóa record cũ trước khi tạo mới
+        await ctx.db.delete({
           collection: 'email-verifications',
-          id: record.id,
-          data: { valid: false }
+          id: record.id
         })
       }
 
-      // Tạo OTP mới
-      const otp = generateOtp()
-      const codeHash = hashOtp(otp)
-
-      await ctx.db.create({
-        collection: 'email-verifications',
-        data: {
-          user: user.id,
-          codeHash,
-          expiresAt: new Date(Date.now() + OTP_EXP_MINUTES * 60 * 1000).toISOString(),
-          attempts: 0,
-          resendCount: (record?.resendCount || 0) + 1,
-          lastSentAt: new Date().toISOString(),
-          valid: true
-        }
-      })
-
-      await sendVerificationEmail(input.email, otp)
+      // Tạo và gửi OTP mới
+      await generateSendEmail(ctx.db, user.id, input.email, currentResendCount + 1)
 
       return { message: 'OTP resent successfully' }
     }),
@@ -306,7 +306,7 @@ export const authRouter = createTRPCRouter({
   
   logout: baseProcedure.mutation(async () => {
     // Lấy cookie store từ Next.js để thao tác với cookies
-    const cookie = await getCookies();
+    // const cookie = await getCookies();
     
     // Xóa cookie để user bị đăng xuất
     // Sau khi xóa cookie, các request tiếp theo sẽ không có token → user chưa đăng nhập
