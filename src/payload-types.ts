@@ -70,6 +70,7 @@ export interface Config {
     users: User;
     media: Media;
     categories: Category;
+    'email-verifications': EmailVerification;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -83,6 +84,7 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    'email-verifications': EmailVerificationsSelect<false> | EmailVerificationsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -127,6 +129,7 @@ export interface User {
   id: string;
   username: string;
   phone: string;
+  active: boolean;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -184,6 +187,22 @@ export interface Category {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-verifications".
+ */
+export interface EmailVerification {
+  id: string;
+  user: string | User;
+  codeHash: string;
+  expiresAt: string;
+  attempts?: number | null;
+  resendCount?: number | null;
+  lastSentAt: string;
+  valid?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -200,6 +219,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'categories';
         value: string | Category;
+      } | null)
+    | ({
+        relationTo: 'email-verifications';
+        value: string | EmailVerification;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -250,6 +273,7 @@ export interface PayloadMigration {
 export interface UsersSelect<T extends boolean = true> {
   username?: T;
   phone?: T;
+  active?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -295,6 +319,21 @@ export interface CategoriesSelect<T extends boolean = true> {
   color?: T;
   parent?: T;
   subcategories?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-verifications_select".
+ */
+export interface EmailVerificationsSelect<T extends boolean = true> {
+  user?: T;
+  codeHash?: T;
+  expiresAt?: T;
+  attempts?: T;
+  resendCount?: T;
+  lastSentAt?: T;
+  valid?: T;
   updatedAt?: T;
   createdAt?: T;
 }

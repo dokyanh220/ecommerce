@@ -8,6 +8,7 @@ import { makeQueryClient } from './query-client'
 import type { AppRouter } from './routers/_app'
 import { createTRPCContext } from '@trpc/tanstack-react-query'
 import superjson from 'superjson'
+import { env } from '~/config/environment'
 
 // Tạo context cho tRPC
 export const { TRPCProvider, useTRPC } = createTRPCContext<AppRouter>()
@@ -27,7 +28,7 @@ function getQueryClient() {
 
 // Hàm hỗ trợ trong server-side để lấy query options từ tRPC
 function getUrl() {
-  const base = typeof window === 'undefined' ? process.env.NEXT_PUBLIC_APP_URL : ''
+  const base = typeof window === 'undefined' ? env.NEXT_PUBLIC_APP_URL : ''
   return `${base ?? ''}/api/trpc`
 }
 
