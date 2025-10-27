@@ -1,12 +1,13 @@
 "use client"
 
-import { ListFilterIcon, SearchIcon } from "lucide-react"
+import { BookmarkCheckIcon, ListFilterIcon, SearchIcon } from "lucide-react"
 import { Input } from "~/components/ui/input"
 import { CategorySidebar } from './categorySidebar'
 import { useState } from "react"
-import { Button } from "~/components/ui/button"
 import { useTRPC } from "~/trpc/client"
-import { useSuspenseQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
+import { Button } from "~/components/ui/button"
+import Link from "next/link"
 
 interface Props {
   disabled?: boolean,
@@ -18,7 +19,7 @@ export const SearchInput = ({
   // data
 }: Props) => {
   const trpc = useTRPC()
-  const { data } = useSuspenseQuery(trpc.categories.getMany.queryOptions())
+  const session = useQuery(trpc.auth.session.queryOptions())
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
@@ -37,6 +38,18 @@ export const SearchInput = ({
       >
         <ListFilterIcon />
       </Button>
+
+      {session.data?.user && (
+        <Button
+          asChild
+          variant='elevated'
+        >
+          <Link href='/library'>
+            <BookmarkCheckIcon />
+            Library
+          </Link>
+        </Button>
+      )}
     </div>
   )
 }
