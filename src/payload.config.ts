@@ -11,6 +11,7 @@ import Users from './collections/Users'
 import Media from './collections/Media'
 import Categories from './collections/Categories'
 import EmailVerifications from './collections/EmailVerifications'
+import { env } from './config/environment'
 
 
 const filename = fileURLToPath(import.meta.url)
@@ -26,12 +27,12 @@ export default buildConfig({
   collections: [Users, Media, Categories, EmailVerifications],
   cookiePrefix: 'bizmart',
   editor: lexicalEditor(),
-  secret: process.env.PAYLOAD_SECRET || '',
+  secret: env.PAYLOAD_SECRET || '',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
   db: mongooseAdapter({
-    url: process.env.DATABASE_URI || '',
+    url: env.MONGODB_URI || '',
   }),
   sharp,
   plugins: [

@@ -63,79 +63,6 @@ export const authRouter = createTRPCRouter({
   register: baseProcedure
     .input(registerSchema)
     .mutation(async ({ input, ctx }) => {
-      // Cách 1
-      // Kiểm tra xem username đã tồn tại chưa
-      // const existingData = await ctx.db.find({
-      //   collection: 'users',
-      //   limit: 1,
-      //   where: {
-      //     username: {
-      //       equals: input.username
-      //     }
-      //   }
-      // })
-
-      // Kiểm tra email tồn tại chưa
-      // const email = await ctx.db.find({
-      //   collection: 'users',
-      //   where: {
-      //     email: { equals: input.email }
-      //   },
-      //   limit: 1
-      // })
-
-      // Kiểm tra phone tồn tại chưa
-      // const phone = await ctx.db.find({
-      //   collection: 'users',
-      //   where: {
-      //     phone: { equals: input.email }
-      //   },
-      //   limit: 1
-      // })
-
-      // Cách 2
-      // // Gộp đối tượng kiểm tra vào mảng
-      // const [userByUsername, userByEmail, userByPhone] = await Promise.all([
-      //   ctx.db.find({
-      //     collection: 'users',
-      //     where: { username: { equals: input.username } },
-      //     limit: 1,
-      //   }),
-      //   ctx.db.find({
-      //     collection: 'users',
-      //     where: { email: { equals: input.email } },
-      //     limit: 1,
-      //   }),
-      //   ctx.db.find({
-      //     collection: 'users',
-      //     where: { phone: { equals: input.phone } },
-      //     limit: 1,
-      //   }),
-      // ]);
-
-      // // Kiểm tra từng đối tượng có tồn tại
-      // if (userByUsername.docs?.[0]) {
-      //   throw new TRPCError({
-      //     code: 'BAD_REQUEST',
-      //     message: 'Username already taken',
-      //   });
-      // }
-
-      // if (userByEmail.docs?.[0]) {
-      //   throw new TRPCError({
-      //     code: 'BAD_REQUEST',
-      //     message: 'Email already taken',
-      //   });
-      // }
-
-      // if (userByPhone.docs?.[0]) {
-      //   throw new TRPCError({
-      //     code: 'BAD_REQUEST',
-      //     message: 'Phone already taken',
-      //   });
-      // }
-
-      // Cách 3
       const checks: { field: keyof typeof input; message: string }[] = [
         { field: 'username', message: 'Username already taken' },
         { field: 'email', message: 'Email already taken' },
@@ -201,33 +128,6 @@ export const authRouter = createTRPCRouter({
         email: input.email,
         message: 'Account created. Please verify your email.'
       }
-
-      // Thực hiện login ngay sau khi register
-      // Gọi method login của PayloadCMS để xác thực user
-      // PayloadCMS sẽ so sánh email/password với dữ liệu trong DB
-      // const data = await ctx.db.login({
-      //   collection: 'users', // Collection chứa user data
-      //   data: {
-      //     email: input.email,
-      //     password: input.password
-      //   }
-      // })
-
-      // Kiểm tra login có thành công không
-      // Nếu thông tin sai, PayloadCMS không trả về token
-      // if (!data.token) {
-      //   throw new TRPCError({
-      //     code: 'UNAUTHORIZED', // HTTP 401 status
-      //     message: 'Failed to login' // Thông báo lỗi cho client
-      //   })
-      // }
-      
-      // await generateAuthCookie({
-      //   prefix: ctx.db.config.cookiePrefix,
-      //   value: data.token
-      // })
-      // Không trả về gì - chỉ tạo user thành công
-      // Client có thể redirect hoặc hiển thị thông báo thành công
     }),
 
   verifyEmail: baseProcedure
@@ -309,7 +209,78 @@ export const authRouter = createTRPCRouter({
       }
     }),
 
-  // ResendEmailOtp: baseProcedure ....
+  resendEmailOtp: baseProcedure
+    .input(
+      (await import('zod')).z.object({
+        email: (await import('zod')).z.string().email()
+      })
+    )
+    .mutation(async ({input, ctx}) => {
+      // Tìm user
+      const usersFind = await ctx.db.find({
+        collection: 'users',
+        where: { email: { equals: input.email } },
+        limit: 1
+      })
+      const user = usersFind.docs?.[0]
+      if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
+      if (user.active) return { message: 'Already verified' }
+
+      // Lấy record
+      const records = await ctx.db.find({
+        collection: 'email-verifications',
+        where: {
+          user: { equals: user.id },
+          valid: { equals: true }
+        },
+        limit: 1
+      })
+      const record = records.docs?.[0]
+
+      if (record) {
+        // Cooldown
+        const diffSeconds = (Date.now() - new Date(record.lastSentAt).getTime()) / 1000
+        if (diffSeconds < RESEND_INTERVAL_SECONDS) {
+          throw new TRPCError({
+            code: 'TOO_MANY_REQUESTS',
+            message: 'Please wait before resending'
+          })
+        }
+        if ((record.resendCount || 0) >= MAX_RESEND_PER_HOUR) {
+          throw new TRPCError({
+            code: 'TOO_MANY_REQUESTS',
+            message: 'Resend limit reached'
+          })
+        }
+        // Vô hiệu hóa record cũ
+        await ctx.db.update({
+          collection: 'email-verifications',
+          id: record.id,
+          data: { valid: false }
+        })
+      }
+
+      // Tạo OTP mới
+      const otp = generateOtp()
+      const codeHash = hashOtp(otp)
+
+      await ctx.db.create({
+        collection: 'email-verifications',
+        data: {
+          user: user.id,
+          codeHash,
+          expiresAt: new Date(Date.now() + OTP_EXP_MINUTES * 60 * 1000).toISOString(),
+          attempts: 0,
+          resendCount: (record?.resendCount || 0) + 1,
+          lastSentAt: new Date().toISOString(),
+          valid: true
+        }
+      })
+
+      await sendVerificationEmail(input.email, otp)
+
+      return { message: 'OTP resent successfully' }
+    }),
 
   login: baseProcedure
     .input(loginSchema)

@@ -14,6 +14,7 @@
     "db:reset": "bun run db:fresh && bun run db:seed"
   },
   "dependencies": {
+    "@getbrevo/brevo": "^3.0.1",
     "@hookform/resolvers": "3.9.1",
     "@payloadcms/db-mongodb": "^3.58.0",
     "@payloadcms/next": "^3.58.0",
@@ -55,6 +56,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
+    "dotenv": "^17.2.3",
     "embla-carousel-react": "^8.6.0",
     "graphql": "^16.8.1",
     "input-otp": "^1.4.2",
@@ -62,7 +64,6 @@
     "lucide-react": "^0.544.0",
     "next": "15.5.4",
     "next-themes": "^0.4.6",
-    "nodemailer": "^7.0.10",
     "payload": "^3.58.0",
     "react": "19.1.0",
     "react-day-picker": "^9.11.0",

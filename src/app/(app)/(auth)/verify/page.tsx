@@ -1,5 +1,7 @@
+import { VerifyEmail } from '~/modules/auth/ui/view/verify-email'
+
 const Page = () => {
-  return <div>verify</div>
+  return <VerifyEmail />
 }
  
 export default Page
