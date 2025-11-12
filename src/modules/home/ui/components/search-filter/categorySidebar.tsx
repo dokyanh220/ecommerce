@@ -3,30 +3,44 @@ import { useState } from 'react'
 import { ScrollArea } from '@radix-ui/react-scroll-area'
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useTRPC } from '~/trpc/client'
-import { useSuspenseQuery } from '@tanstack/react-query'
 import { CategoriesGetManyOutput } from '~/modules/categories/types'
+// import { useTRPC } from '~/trpc/client'
+// import { useSuspenseQuery } from '@tanstack/react-query'
 
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
-  // data: CustomCategory[]
+  // Dữ liệu categories (mảng category). Nếu chưa có có thể truyền [] để đơn giản hóa logic.
+  data: CategoriesGetManyOutput
 }
 
 export const CategorySidebar = ({
   open,
   onOpenChange,
-  // data
+  data
 }: Props) => {
-  const trpc = useTRPC()
-  const { data } = useSuspenseQuery(trpc.categories.getMany.queryOptions())
-
+  // const trpc = useTRPC()
+  // const { data } = useSuspenseQuery(trpc.categories.getMany.queryOptions())
   const router = useRouter()
 
-  // parentCategories là các danh mục con của danh mục cha được chọn
-  const [parentCategories, setParentCategories] = useState<CategoriesGetManyOutput | null>(null)
-  // selectedCategory là danh mục cha được chọn
-  const [selectedCategory, setSelectedCategory] = useState<CategoriesGetManyOutput[1] | null>(null)
+  // Element type (mỗi phần tử của mảng): lấy bằng typeof data[number] thay vì chỉ số [1]
+  // Mỗi category có thể có subcategories (mảng con) hoặc undefined (lá cuối)
+  interface CategoryItem {
+    id: string
+    name: string
+    slug: string
+    color?: string | null
+    // parent có thể là id (string) hoặc CategoryItem (tùy vào depth mà Payload trả về)
+    parent?: string | CategoryItem | null
+    updatedAt: string
+    createdAt: string
+    subcategories?: CategoryItem[] // optional
+  }
+
+  // Danh mục con của danh mục đang chọn (nếu có)
+  const [parentCategories, setParentCategories] = useState<CategoryItem[] | null>(null)
+  // Danh mục đang được chọn để drill-down
+  const [selectedCategory, setSelectedCategory] = useState<CategoryItem | null>(null)
 
   // Nếu có danh mục cha, hiển thị danh mục con [parentCategory.children]
   // Nếu không có danh mục cha, hiển thị danh mục gốc [data]
@@ -38,11 +52,12 @@ export const CategorySidebar = ({
     onOpenChange(open)
   }
 
-  const handleCategoryClick = (category: CategoriesGetManyOutput[1]) => {
+  const handleCategoryClick = (category: CategoryItem) => {
     // Nếu category có subcategories thì mở danh mục con
     if (category.subcategories && category.subcategories.length > 0) {
-      // as CustomCategory[] vì subcategories có thể là undefined
-      setParentCategories(category.subcategories as CategoriesGetManyOutput)
+      // Không ép kiểu: subcategories đã đúng là CategoryItem[] | undefined
+      // subcategories hiện là CategoryItem[] | undefined → đã được khai báo optional
+      setParentCategories(category.subcategories ?? null)
       setSelectedCategory(category)
     } else {
       // Đây là category con, chuyển hướng tới trang category
@@ -50,11 +65,7 @@ export const CategorySidebar = ({
         // thực hiện chuyển hướng tới trang category với slug của category
         router.push(`/${selectedCategory.slug}/${category.slug}`)
       } else { // Với category gốc
-        if (category.slug === 'all') {
-          router.push(`/`)
-        } else {
-          router.push(`/${category.slug}`)
-        }
+        router.push(category.slug === 'all' ? '/' : `/${category.slug}`)
       }
       handleOpenChange(false)
     }

@@ -16,7 +16,7 @@ export const SearchFilter = () => {
     }}>
       <SearchInput />     
       <div className="hidden lg:block">
-        <Categories/>
+        <Categories data={data}/>
       </div>
     </div>
   )

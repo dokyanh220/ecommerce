@@ -28,7 +28,7 @@ export const categoriesRouter = createTRPCRouter({
         subcategories: undefined // Xóa nested subcategories để tránh render quá sâu
       }))
     }))
-
+    // console.log('🚀 ~ formattedData:', formattedData)
     return formattedData
   })
 })

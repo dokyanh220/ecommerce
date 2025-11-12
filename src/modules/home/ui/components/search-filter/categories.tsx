@@ -6,16 +6,19 @@ import { CategorySidebar } from './categorySidebar'
 import { Button } from '~/components/ui/button'
 import { ListFilterIcon } from 'lucide-react'
 import { cn } from '~/lib/utils'
-import { useTRPC } from '~/trpc/client'
-import { useSuspenseQuery } from '@tanstack/react-query'
+// import { useTRPC } from '~/trpc/client'
+// import { useSuspenseQuery } from '@tanstack/react-query'
+import { useParams } from 'next/navigation'
+import { CategoriesGetManyOutput } from '~/modules/categories/types'
 
-// interface Props {
-//   data: CustomCategory[]
-// }
+interface Props {
+  data: CategoriesGetManyOutput
+}
 
-export const Categories = () => {
-  const trpc = useTRPC()
-  const { data } = useSuspenseQuery(trpc.categories.getMany.queryOptions())
+export const Categories = ({ data }: Props) => {
+  const params = useParams() 
+  // const trpc = useTRPC()
+  // const { data } = useSuspenseQuery(trpc.categories.getMany.queryOptions())
 
   const containerRef = useRef<HTMLDivElement>(null)
   const measureRef = useRef<HTMLDivElement>(null)
@@ -28,11 +31,12 @@ export const Categories = () => {
   const [isAnyHovered, setIsAnyHovered] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
+  const categoryParam = params.category as string | undefined
   // activeCategory là category hiện tại người dùng đang chọn
   // Ví dụ: người dùng đang chọn /category/all thì activeCategory = 'all'
   // Nếu người dùng đang chọn /category/products thì activeCategory = 'products'
   // Mặc định không có category nào được chọn thì activeCategory = 'all'
-  const activeCategory = 'all'
+  const activeCategory = categoryParam || 'all'
   // activeCategoryIndex là vị trí index của category hiện tại trong data
   const activeCategoryIndex = data.findIndex((category) => category.slug === activeCategory)
   // isActiveCategoryHidden là category hiện tại có bị ẩn hay không
@@ -83,7 +87,7 @@ export const Categories = () => {
     <div className='relative w-full'>
       {/* Categories sidebar */}
       {isSidebarOpen && (
-        <CategorySidebar open={isSidebarOpen} onOpenChange={setIsSidebarOpen} />
+        <CategorySidebar data={data} open={isSidebarOpen} onOpenChange={setIsSidebarOpen} />
       )}
 
       {/* Ẩn category container không chứa đủ */}
