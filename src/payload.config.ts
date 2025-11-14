@@ -12,6 +12,7 @@ import Media from './collections/Media'
 import Categories from './collections/Categories'
 import EmailVerifications from './collections/EmailVerifications'
 import { env } from './config/environment'
+import Products from './collections/Products'
 
 
 const filename = fileURLToPath(import.meta.url)
@@ -24,7 +25,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media, Categories, EmailVerifications],
+  collections: [Users, Media, Categories, EmailVerifications, Products],
   cookiePrefix: 'bizmart',
   editor: lexicalEditor(),
   secret: env.PAYLOAD_SECRET || '',
