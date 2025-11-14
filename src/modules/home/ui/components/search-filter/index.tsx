@@ -6,7 +6,7 @@ import { useTRPC } from "~/trpc/client"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { useParams } from "next/navigation"
 import { DEFAULT_BG_COLOR } from "~/modules/home/constants"
-import BreadcrumbNavigation from "./breadcrumsNavigation"
+import BreadcrumbNavigation from "./BreadcrumsNavigation"
 
 export const SearchFilter = () => {
   // Sử dụng Custom Hook Pattern với tRPC! Đây là cách để chia sẻ data giữa nhiều component mà không cần truyền props.

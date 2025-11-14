@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 const Categories: CollectionConfig = {
   slug: 'categories',
+  admin: { useAsTitle: 'name' },
   fields: [
    {
     name: 'name',
