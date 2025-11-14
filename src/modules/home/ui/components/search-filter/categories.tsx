@@ -130,6 +130,7 @@ export const Categories = ({ data }: Props) => {
           ref={viewAllRef}
         >
           <Button
+            variant='elevated'
             className={cn(
               'h-11 px-4 rounded-full bg-transparent border border-transparent text-black hover:border-primary hover:bg-white z-50',
               isActiveCategoryHidden && !isAnyHovered && 'bg-white border-primary'

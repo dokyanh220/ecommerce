@@ -19,10 +19,8 @@ const BreadcrumbNavigation = ({
   activeSubcategoryName,
   activeCategory
 }: Props) => {
-  // console.log('🚀 ~ BreadcrumbNavigation ~ activeCategoryName:', activeCategoryName)
-  // console.log('🚀 ~ BreadcrumbNavigation ~ activeSubcategoryName:', activeSubcategoryName)
-  // console.log('🚀 ~ BreadcrumbNavigation ~ activeCategory:', activeCategory)
-  if (!activeCategoryName && activeCategory === 'all') return null
+  if (activeCategory === 'all' && !activeSubcategoryName) return null
+  if (!activeCategoryName && !activeSubcategoryName) return null
 
   return (
     <Breadcrumb>
