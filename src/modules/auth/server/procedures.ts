@@ -12,6 +12,7 @@ const MAX_ATTEMPTS = 5
 const RESEND_INTERVAL_SECONDS = 60
 const MAX_RESEND_PER_HOUR = 5
 let currentResendCount = 0
+let passwordTemp = ''
 
 // Helper function: Tạo và gửi email OTP
 async function generateSendEmail(ctx: any, userId: string, email: string, resendCount = 0) {
@@ -131,6 +132,8 @@ export const authRouter = createTRPCRouter({
         }
       })
 
+      passwordTemp = input.password
+
       // Thực hiện tạo OTP từ server gửi đến email user để verify sau đó auto login
       // Tạo OTP
       await generateSendEmail(ctx.db, newUser.id, input.email)
@@ -221,7 +224,9 @@ export const authRouter = createTRPCRouter({
       })
 
       // Login tự động sau verify
-      const loginData = await performLogin(ctx, input.email, input.password)
+      const loginData = await performLogin(ctx, input.email, passwordTemp)
+
+      passwordTemp = ''
 
       return { 
         message: 'Verified successfully', 
@@ -304,12 +309,14 @@ export const authRouter = createTRPCRouter({
       return await performLogin(ctx, input.email, input.password)
     }),
   
-  logout: baseProcedure.mutation(async () => {
+  logout: baseProcedure.mutation(async ({ ctx }) => {
     // Lấy cookie store từ Next.js để thao tác với cookies
-    // const cookie = await getCookies();
+    const cookie = await getCookies();
     
     // Xóa cookie để user bị đăng xuất
     // Sau khi xóa cookie, các request tiếp theo sẽ không có token → user chưa đăng nhập
-    // cookie.delete()
+    cookie.delete(`${ctx.db.config.cookiePrefix}-token`)
+
+    return
   })
 })

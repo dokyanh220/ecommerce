@@ -10,7 +10,6 @@ export default function Home () {
   
   return (
     <div>
-      <p>Home page</p>
       {JSON.stringify(data?.user, null, 2)}
     </div>
   )

@@ -2,7 +2,7 @@
 
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { loginSchema } from '../../schemas'
+import { loginSchema } from '~/modules/auth/schemas'
 import { Poppins } from 'next/font/google'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'

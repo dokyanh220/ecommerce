@@ -1,9 +1,10 @@
-import { Navbar } from './Navbar'
-import { SearchFilter, SearchFilterLoading } from './search-filter'
+import { Navbar } from '~/modules/home/ui/components/Navbar'
+import { SearchFilter, SearchFilterLoading } from '~/modules/home/ui/components/search-filter'
 import { getQueryClient, trpc } from '~/trpc/server'
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
 import { Suspense } from 'react'
-import Footer from './footer/page'
+import Footer from '~/modules/home/ui/components/footer/page'
+
 
 // Định nghĩa kiểu props cho component Layout
 interface Props {
