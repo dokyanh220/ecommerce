@@ -25,7 +25,6 @@ export const categoriesRouter = createTRPCRouter({
       subcategories: (doc.subcategories?.docs ?? []).map((doc) => ({
         // Vì depth: 1 nên subcategories đã được populate đầy đủ
         ...(doc as Category), // Type assertion để đảm bảo TypeScript hiểu đúng kiểu
-        subcategories: undefined // Xóa nested subcategories để tránh render quá sâu
       }))
     }))
     // console.log('🚀 ~ formattedData:', formattedData)
