@@ -7,9 +7,8 @@ import { useMutation } from '@tanstack/react-query'
 import { useTRPC } from '~/trpc/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '~/components/ui/button'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '~/components/ui/form'
+import { Form, FormField, FormItem, FormMessage } from '~/components/ui/form'
 import { toast } from 'sonner'
-import { useState } from 'react'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '~/components/ui/input-otp'
 
 const schema = z.object({

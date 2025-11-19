@@ -1,7 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 const Products: CollectionConfig = {
-  slug: 'Products',
+  slug: 'products',
   fields: [
     {
       name: 'name',
@@ -15,6 +15,9 @@ const Products: CollectionConfig = {
     {
       name: 'price',
       type: 'number',
+      admin: {
+        description: 'Price in USD'
+      },
       required: true
     },
     {

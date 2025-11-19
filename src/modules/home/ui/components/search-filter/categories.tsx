@@ -9,7 +9,7 @@ import { cn } from '~/lib/utils'
 // import { useTRPC } from '~/trpc/client'
 // import { useSuspenseQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
-import { CategoriesGetManyOutput } from '~/modules/categories/types'
+import { CategoriesGetManyOutput } from '~/modules/categories/server/types'
 
 interface Props {
   data: CategoriesGetManyOutput

@@ -7,7 +7,7 @@ import { Button } from '~/components/ui/button'
 import { useDropdownPostion } from './use-dropdown-postion'
 import { SubcategoryMenu } from './subcategoryMenu'
 import Link from 'next/link'
-import { CategoriesGetManyOutput } from '~/modules/categories/types'
+import { CategoriesGetManyOutput } from '~/modules/categories/server/types'
 
 interface Props {
   category: CategoriesGetManyOutput[1],
