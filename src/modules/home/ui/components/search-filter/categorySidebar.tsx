@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { ScrollArea } from '@radix-ui/react-scroll-area'
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { CategoriesGetManyOutput } from '~/modules/categories/types'
+import { CategoriesGetManyOutput } from '~/modules/categories/server/types'
 // import { useTRPC } from '~/trpc/client'
 // import { useSuspenseQuery } from '@tanstack/react-query'
 
