@@ -9,11 +9,26 @@ export const procductsRouter = createTRPCRouter({
   getMany: baseProcedure
     .input(
       z.object({
-        category: z.string().nullable().optional() // .nullable() cho phép nhận giá trị null 
+        category: z.string().nullable().optional(), // .nullable() cho phép nhận giá trị null 
+        minPrice: z.string().nullable().optional(),
+        maxPrice: z.string().nullable().optional()
       })
     )
     .query(async ({ ctx, input }) => {
       const where : Where = {}
+
+      if (input.minPrice) {
+        where.price = {
+          greater_than_equal: input.minPrice
+        }
+      }
+
+      if (input.maxPrice) {
+        where.price = {
+          less_than_equal: input.maxPrice
+        }
+      }
+
       // ctx được cung cấp bởi baseProcedure
       if (input.category) {
         const categoriesData = await ctx.db.find({
@@ -41,14 +56,15 @@ export const procductsRouter = createTRPCRouter({
         const parentCategory = formattedData[0]
 
         if (parentCategory) {
-            subcategoriesSlug.push(
-              ...parentCategory.subcategories.map(sub => sub.slug)
-            )
+          subcategoriesSlug.push(
+            ...parentCategory.subcategories.map(sub => sub.slug)
+          )
+          
+          where['category.slug'] = {
+            in: [parentCategory.slug, ...subcategoriesSlug]
+          }
         }
 
-        where['category.slug'] = {
-          in: [parentCategory.slug, ...subcategoriesSlug]
-        }
       }
       
       // Lấy products từ PayloadCMS

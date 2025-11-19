@@ -44,12 +44,12 @@ export const SearchFilter = () => {
 
 export const SearchFilterLoading = () => {
   return (
-    <div className="px-4 lg:px-12 py-8 border-b flex flex-col gap-4 w-full" style={{
+    <div className="px-4 lg:px-12 py-6 border-b flex flex-col gap-4 w-full" style={{
       backgroundColor: DEFAULT_BG_COLOR
     }}>
       <SearchInput disabled />     
       <div className="hidden lg:block">
-        <div className="h-10"/>
+        <div className="h-8"/>
       </div>
     </div>
   )
