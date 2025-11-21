@@ -1,6 +1,6 @@
 interface Props{
   params: Promise<{
-    category: string,
+    category: string
     subcategory: string
   }>
 }

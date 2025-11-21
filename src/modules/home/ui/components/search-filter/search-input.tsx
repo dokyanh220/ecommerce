@@ -10,8 +10,8 @@ import { Button } from "~/components/ui/button"
 import Link from "next/link"
 
 interface Props {
-  disabled?: boolean,
-  // data: CustomCategory[]/
+  disabled?: boolean
+  // data: CustomCategory[]
 }
 
 export const SearchInput = ({

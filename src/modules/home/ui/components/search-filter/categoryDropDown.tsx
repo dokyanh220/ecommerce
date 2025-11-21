@@ -10,9 +10,9 @@ import Link from 'next/link'
 import { CategoriesGetManyOutput } from '~/modules/categories/server/types'
 
 interface Props {
-  category: CategoriesGetManyOutput[1],
-  isActive?: boolean,
-  isNavigationHovered?: boolean,
+  category: CategoriesGetManyOutput[1]
+  isActive?: boolean
+  isNavigationHovered?: boolean
 }
 
 export const CategoryDropDown = ({

@@ -4,23 +4,23 @@ import { ScrollArea } from '@radix-ui/react-scroll-area'
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { CategoriesGetManyOutput } from '~/modules/categories/server/types'
-// import { useTRPC } from '~/trpc/client'
-// import { useSuspenseQuery } from '@tanstack/react-query'
+import { useTRPC } from '~/trpc/client'
+import { useSuspenseQuery } from '@tanstack/react-query'
 
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
   // Dữ liệu categories (mảng category). Nếu chưa có có thể truyền [] để đơn giản hóa logic.
-  data: CategoriesGetManyOutput
+  // data: CategoriesGetManyOutput
 }
 
 export const CategorySidebar = ({
   open,
   onOpenChange,
-  data
+  // data
 }: Props) => {
-  // const trpc = useTRPC()
-  // const { data } = useSuspenseQuery(trpc.categories.getMany.queryOptions())
+  const trpc = useTRPC()
+  const { data } = useSuspenseQuery(trpc.categories.getMany.queryOptions())
   const router = useRouter()
 
   // Element type (mỗi phần tử của mảng): lấy bằng typeof data[number] thay vì chỉ số [1]
@@ -52,24 +52,47 @@ export const CategorySidebar = ({
     onOpenChange(open)
   }
 
-  const handleCategoryClick = (category: CategoryItem) => {
-    // Nếu category có subcategories thì mở danh mục con
-    if (category.subcategories && category.subcategories.length > 0) {
-      // Không ép kiểu: subcategories đã đúng là CategoryItem[] | undefined
-      // subcategories hiện là CategoryItem[] | undefined → đã được khai báo optional
-      setParentCategories(category.subcategories ?? null)
-      setSelectedCategory(category)
+  // const handleCategoryClick = (category: CategoryItem) => {
+  //   // Nếu category có subcategories thì mở danh mục con
+  //   if (category.subcategories && category.subcategories.length > 0) {
+  //     // Không ép kiểu: subcategories đã đúng là CategoryItem[] | undefined
+  //     // subcategories hiện là CategoryItem[] | undefined → đã được khai báo optional
+  //     setParentCategories(category.subcategories ?? null)
+  //     setSelectedCategory(category)
+  //   } else {
+  //     // Đây là category con, chuyển hướng tới trang category
+  //     if (parentCategories && selectedCategory) {
+  //       // thực hiện chuyển hướng tới trang category với slug của category
+  //       router.push(`/${selectedCategory.slug}/${category.slug}`)
+  //     } else { // Với category gốc
+  //       router.push(category.slug === 'all' ? '/' : `/${category.slug}`)
+  //     }
+  //     handleOpenChange(false)
+  //   }
+  // }
+
+  // ✅ Navigate tới trang category
+  const handleCategoryNavigate = (category: CategoryItem) => {
+    if (parentCategories && selectedCategory) {
+      // Category con: /parent-slug/child-slug
+      router.push(`/${selectedCategory.slug}/${category.slug}`)
     } else {
-      // Đây là category con, chuyển hướng tới trang category
-      if (parentCategories && selectedCategory) {
-        // thực hiện chuyển hướng tới trang category với slug của category
-        router.push(`/${selectedCategory.slug}/${category.slug}`)
-      } else { // Với category gốc
-        router.push(category.slug === 'all' ? '/' : `/${category.slug}`)
-      }
-      handleOpenChange(false)
+      // Category gốc: / hoặc /category-slug
+      router.push(category.slug === 'all' ? '/' : `/${category.slug}`)
+    }
+    handleOpenChange(false)
+  }
+
+  // ✅ Mở subcategories
+  const handleExpandSubcategories = (category: CategoryItem, e: React.MouseEvent) => {
+    e.stopPropagation() // Ngăn event bubble lên parent button
+    
+    if (category.subcategories && category.subcategories.length > 0) {
+      setParentCategories(category.subcategories)
+      setSelectedCategory(category)
     }
   }
+  
 
   const handleBackClick = () => {
     if (parentCategories && selectedCategory) {
@@ -101,16 +124,22 @@ export const CategorySidebar = ({
           </button>
         )}
         {currentCategories.map((category) => (
-          <button
+          <div
             key={category.slug}
-            onClick={() => handleCategoryClick(category)}
+            onClick={() => handleCategoryNavigate(category)}
             className='w-full text-left p-4 hover:bg-black hover:text-white flex justify-between items-center text-base font-medium'
           >
             {category.name}
             {category.subcategories && category.subcategories.length > 0 && (
-              <ChevronRightIcon className='size-4' />
+              <button
+                onClick={(e) => handleExpandSubcategories(category, e)}
+                className='p-0 cursor-pointer'
+                aria-label='View subcategories'
+              >
+                <ChevronRightIcon className='size-4 transition-transform duration-200 hover:scale-150' />
+              </button>
             )}
-          </button>  
+          </div>  
         ))}
       </ScrollArea>
     </SheetContent>

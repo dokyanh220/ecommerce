@@ -2,7 +2,7 @@ import 'server-only'
 import { cookies as getCookies } from "next/headers"
 
 interface Props {
-  prefix: string,
+  prefix: string
   value: string
 }
 

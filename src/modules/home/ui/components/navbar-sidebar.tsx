@@ -14,13 +14,13 @@ import { Button } from '~/components/ui/button'
 import { LogOut } from 'lucide-react'
 
 interface NavbarItem {
-  href: string,
+  href: string
   children: React.ReactNode
 }
 
 interface Props {
-  items: NavbarItem[],
-  open: boolean,
+  items: NavbarItem[]
+  open: boolean
   onOpenChange: (open: boolean) => void
 }
 
