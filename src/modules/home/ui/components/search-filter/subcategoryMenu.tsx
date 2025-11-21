@@ -3,8 +3,8 @@ import { CategoriesGetManyOutput } from "~/modules/categories/server/types"
 import { Category } from "~/payload-types"
 
 interface Props {
-  category: CategoriesGetManyOutput[1],
-  isOpen: boolean,
+  category: CategoriesGetManyOutput[1]
+  isOpen: boolean
   position: { top: number, left: number }
 }
 

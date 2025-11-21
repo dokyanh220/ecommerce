@@ -87,7 +87,7 @@ export const Categories = ({ data }: Props) => {
     <div className='relative w-full'>
       {/* Categories sidebar */}
       {isSidebarOpen && (
-        <CategorySidebar data={data} open={isSidebarOpen} onOpenChange={setIsSidebarOpen} />
+        <CategorySidebar open={isSidebarOpen} onOpenChange={setIsSidebarOpen} />
       )}
 
       {/* Ẩn category container không chứa đủ */}

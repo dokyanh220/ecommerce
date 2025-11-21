@@ -6,14 +6,22 @@ import { getQueryClient, trpc } from "~/trpc/server"
 
 interface Props{
   params: Promise<{
-    subcategory: string
+    category: string
+  }>
+  searchParams: Promise<{
+    minPrice: string | undefined,
+    maxPrice: string | undefined
   }>
 }
-const Page = async ({ params }: Props) => {
-  const { subcategory } = await params
+const Page = async ({ params, searchParams }: Props) => {
+  const { category } = await params
+  const { minPrice, maxPrice} = await searchParams
+
   const queryClient = await getQueryClient()
   void queryClient.prefetchQuery(trpc.products.getMany.queryOptions({
-    category: subcategory
+    category,
+    minPrice,
+    maxPrice
   }))
 
   return ( 
@@ -26,7 +34,7 @@ const Page = async ({ params }: Props) => {
 
           <div className="lg:col-span-4 xl:col-span-6">
             <Suspense fallback={<ProductListSkeleton />}>
-              <ProductList category={subcategory} />
+              <ProductList category={category} />
             </Suspense>
           </div>
        </div>

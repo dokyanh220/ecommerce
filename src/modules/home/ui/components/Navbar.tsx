@@ -17,8 +17,8 @@ const poppins = Poppins({
 })
 
 interface NavbarItemProps {
-  href: string,
-  children: React.ReactNode,
+  href: string
+  children: React.ReactNode
   isActive?: boolean
 }
 
