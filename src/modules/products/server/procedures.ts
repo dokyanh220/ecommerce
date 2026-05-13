@@ -11,11 +11,12 @@ export const procductsRouter = createTRPCRouter({
       z.object({
         category: z.string().nullable().optional(), // .nullable() cho phép nhận giá trị null 
         minPrice: z.string().nullable().optional(),
-        maxPrice: z.string().nullable().optional()
+        maxPrice: z.string().nullable().optional(),
+        tags: z.array(z.string()).nullable().optional()
       })
     )
     .query(async ({ ctx, input }) => {
-      const where : Where = {}
+      const where: Where = {}
 
       if (input.minPrice && input.maxPrice) {
         where.price = {
@@ -63,20 +64,26 @@ export const procductsRouter = createTRPCRouter({
           subcategoriesSlug.push(
             ...parentCategory.subcategories.map(sub => sub.slug)
           )
-          
+
           where['category.slug'] = {
             in: [parentCategory.slug, ...subcategoriesSlug]
           }
         }
 
       }
-      
+
+      if (input.tags && input.tags.length > 0) {
+        where.tags = {
+          in: input.tags
+        }
+      }
+
       // Lấy products từ PayloadCMS
       const data = await ctx.db.find({
         collection: 'products', // Tên collection trong PayloadCMS
         depth: 1, // Populate 'categories' và 'image'
         where
+      })
+      return data
     })
-    return data
-  })
 })

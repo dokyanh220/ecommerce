@@ -5,6 +5,7 @@ import { useState } from "react"
 import { cn } from "~/lib/utils"
 import { PriceFilter } from "./price-filter"
 import { useProductFilters } from "../../hooks/use-product-filter"
+import { TagsFilter } from "./tags-filter"
 
 interface ProductFilterProps {
   title: string
@@ -62,7 +63,8 @@ export const ProductFilters = () => {
   const onClear = () => {
     setFilters({
       minPrice: '',
-      maxPrice: ''
+      maxPrice: '',
+      tags: []
     })
   }
 
@@ -76,12 +78,21 @@ export const ProductFilters = () => {
           </button>
         )}
       </div>
-      <ProductFilter title="Price" className="border-b-0">
+      {/* Price Filter */}
+      <ProductFilter title="Price">
         <PriceFilter
           minPrice={filters.minPrice}
           maxPrice={filters.maxPrice}
           onMinPriceChange={value => onChange('minPrice', value)}
           onMaxPriceChange={value => onChange('maxPrice', value)}
+        />
+      </ProductFilter>
+
+      {/* Tags Filter */}
+      <ProductFilter title="Tags" className="border-b-0">
+        <TagsFilter
+          value={filters.tags}
+          onChange={(value) => onChange('tags', value)}
         />
       </ProductFilter>
     </div>

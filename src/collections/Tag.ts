@@ -2,6 +2,9 @@ import type { CollectionConfig } from 'payload'
 
 const Tags: CollectionConfig = {
     slug: 'tags',
+    admin: {
+        useAsTitle: 'name'
+    },
     access: {
         read: () => true,
     },
@@ -10,6 +13,7 @@ const Tags: CollectionConfig = {
             name: 'name',
             type: 'text',
             required: true,
+            unique: true
         },
         {
             name: 'products',
