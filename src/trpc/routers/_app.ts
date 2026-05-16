@@ -2,9 +2,11 @@ import { createTRPCRouter } from '../init'
 import { categoriesRouter } from '~/modules/categories/server/procedures'
 import { authRouter } from '~/modules/auth/server/procedures'
 import { procductsRouter } from '~/modules/products/server/procedures'
+import { tagsRouter } from '~/modules/tags/server/procedures'
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
+  tags: tagsRouter,
   categories: categoriesRouter,
   products: procductsRouter
 })

@@ -7,7 +7,7 @@ import { Poppins } from 'next/font/google'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTRPC } from '~/trpc/client'
-import Link from 'next/link' 
+import Link from 'next/link'
 import {
   Form,
   FormControl,
@@ -78,7 +78,7 @@ export const SignInView = () => {
     loginMutation.mutate(values)
   }
 
-  return ( 
+  return (
     <div className="grid grid-cols-1 lg:grid-cols-5">
       <div className="bg-[#f4f4f0] h-screen w-full lg:col-span-3 overflow-y-auto">
         <Form {...form}>
@@ -104,7 +104,7 @@ export const SignInView = () => {
                 </Link>
               </Button>
             </div>
-            
+
             <h1 className='text-4xl font-medium'>
               Welcome back to BizMart.
             </h1>
@@ -128,8 +128,8 @@ export const SignInView = () => {
                   <FormLabel className='text-base'>Password</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Input 
-                        {...field} 
+                      <Input
+                        {...field}
                         type={showPassword ? 'text' : 'password'}
                         className="pr-10"
                       />
@@ -164,7 +164,7 @@ export const SignInView = () => {
               variant='elevated'
               className='bg-black text-white hover:bg-pink-400 disabled:opacity-60 disabled:pointer-events-none'
             >
-              {loginMutation.isPending ? 'Creating…' : 'Create account'}
+              {loginMutation.isPending ? 'Logging in...' : 'Login'}
             </Button>
           </form>
         </Form>

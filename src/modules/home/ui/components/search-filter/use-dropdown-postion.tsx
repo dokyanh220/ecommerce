@@ -1,7 +1,7 @@
 import { RefObject } from "react"
 
 export const useDropdownPostion = (
-  ref: RefObject<HTMLDivElement | null> | RefObject<>
+  ref: RefObject<HTMLDivElement | null> | RefObject<HTMLButtonElement | null>
 ) => {
   const getDropdownPosition = () => {
     // Nếu ref.current không tồn tại, mặc định = { top: 0, left: 0 }
@@ -14,7 +14,7 @@ export const useDropdownPostion = (
     // Tính tọa độ top và left
     let left = rect.left + window.scrollX
     let top = rect.bottom + window.scrollY
-    
+
     // Kiểm tra nếu dropdown vượt qua cạnh phải trình duyệt
     if (left + dropdownWidth > window.innerWidth) {
       // Nếu vượt qua cạnh phải, căn chỉnh dropdown về bên trái

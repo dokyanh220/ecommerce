@@ -10,8 +10,8 @@
     "lint": "eslint",
     "generate:types": "payload generate:types",
     "db:fresh": "payload migrate:fresh",
-    "db:seed": "bun run src/seed.ts",
-    "db:reset": "bun run db:fresh && bun run db:seed"
+    "db:seed": "npm run src/seed.ts",
+    "db:reset": "npm run db:fresh && npm run db:seed"
   },
   "dependencies": {
     "@getbrevo/brevo": "^3.0.1",
