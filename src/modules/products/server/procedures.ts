@@ -1,7 +1,8 @@
-import type { Where } from "payload"
+import type { Sort, Where } from "payload"
 import { z } from "zod"
 import { Category } from "~/payload-types"
 import { baseProcedure, createTRPCRouter } from "~/trpc/init"
+import { sortValue } from "../search-params"
 
 // Định nghĩa categories router với các procedure liên quan đến categories
 export const procductsRouter = createTRPCRouter({
@@ -12,11 +13,25 @@ export const procductsRouter = createTRPCRouter({
         category: z.string().nullable().optional(), // .nullable() cho phép nhận giá trị null 
         minPrice: z.string().nullable().optional(),
         maxPrice: z.string().nullable().optional(),
-        tags: z.array(z.string()).nullable().optional()
+        tags: z.array(z.string()).nullable().optional(),
+        sort: z.enum(sortValue).nullable().optional()
       })
     )
     .query(async ({ ctx, input }) => {
       const where: Where = {}
+      let sort: Sort = "-createdAt"
+
+      if (input.sort == "curated") {
+        sort = "-createdAt"
+      }
+
+      if (input.sort == "hot_and_new") {
+        sort = "+createAt"
+      }
+
+      if (input.sort == "trending") {
+        sort = "-createdAt"
+      }
 
       if (input.minPrice && input.maxPrice) {
         where.price = {
@@ -82,7 +97,8 @@ export const procductsRouter = createTRPCRouter({
       const data = await ctx.db.find({
         collection: 'products', // Tên collection trong PayloadCMS
         depth: 1, // Populate 'categories' và 'image'
-        where
+        where,
+        sort
       })
       return data
     })
