@@ -84,7 +84,7 @@ export const VerifyEmail = () => {
               <Button
                 type="submit"
                 variant='elevated'
-                className='bg-black text-white hover:bg-pink-400 disabled:opacity-60 disabled:pointer-events-none'
+                className='bg-black text-white hover:bg-fuchsia-300 disabled:opacity-60 disabled:pointer-events-none'
                 disabled={verifyMutation.isPending || form.watch('code').length !== 6}
               >
                 {verifyMutation.isPending ? 'Verifying...' : 'Verify'}

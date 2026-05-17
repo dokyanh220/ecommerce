@@ -283,7 +283,7 @@ export const SignUpView = () => {
               type='submit'
               size='lg'
               variant='elevated'
-              className='bg-black text-white hover:bg-pink-400 disabled:opacity-60 disabled:pointer-events-none'
+              className='bg-black text-white hover:bg-fuchsia-300 disabled:opacity-60 disabled:pointer-events-none'
             >
               {registerMutation.isPending ? 'Creating…' : 'Create account'}
             </Button>
