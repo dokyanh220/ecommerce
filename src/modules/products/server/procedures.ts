@@ -1,6 +1,6 @@
 import type { Sort, Where } from "payload"
 import { z } from "zod"
-import { Category } from "~/payload-types"
+import { Category, Media } from "~/payload-types"
 import { baseProcedure, createTRPCRouter } from "~/trpc/init"
 import { sortValue } from "../search-params"
 
@@ -100,6 +100,12 @@ export const procductsRouter = createTRPCRouter({
         where,
         sort
       })
-      return data
+      return {
+        ...data,
+        docs: data.docs.map(doc => ({
+          ...doc,
+          image: doc.image as Media | null 
+        }))
+      }
     })
 })
