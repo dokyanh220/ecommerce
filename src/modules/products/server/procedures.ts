@@ -3,6 +3,7 @@ import { z } from "zod"
 import { Category, Media } from "~/payload-types"
 import { baseProcedure, createTRPCRouter } from "~/trpc/init"
 import { sortValue } from "../search-params"
+import { DEFAULT_TAGS_LIMIT } from "~/constants"
 
 // Định nghĩa categories router với các procedure liên quan đến categories
 export const procductsRouter = createTRPCRouter({
@@ -10,6 +11,8 @@ export const procductsRouter = createTRPCRouter({
   getMany: baseProcedure
     .input(
       z.object({
+        cursor: z.number().default(1),
+        limit: z.number().default(DEFAULT_TAGS_LIMIT),
         category: z.string().nullable().optional(), // .nullable() cho phép nhận giá trị null 
         minPrice: z.string().nullable().optional(),
         maxPrice: z.string().nullable().optional(),
@@ -98,7 +101,9 @@ export const procductsRouter = createTRPCRouter({
         collection: 'products', // Tên collection trong PayloadCMS
         depth: 1, // Populate 'categories' và 'image'
         where,
-        sort
+        sort,
+        page: input.cursor,
+        limit: input.limit
       })
       return {
         ...data,
