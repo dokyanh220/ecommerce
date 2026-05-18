@@ -371,22 +371,6 @@ Truy cập:
 
 ---
 
-## 🤝 Đóng Góp
-
-1. Fork repository
-2. Tạo feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add some amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Tạo Pull Request
-
----
-
-## 📄 License
-
-Dự án này được phát hành dưới giấy phép [MIT](LICENSE).
-
----
-
 <div align="center">
 
 **Built with ❤️ using Next.js, PayloadCMS & tRPC**
