@@ -2,18 +2,20 @@
 import { mongooseAdapter } from '@payloadcms/db-mongodb'
 import { payloadCloudPlugin } from '@payloadcms/payload-cloud'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
-import path from 'path'
 import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
+import { env } from './config/environment'
+import { multiTenantPlugin } from '@payloadcms/plugin-multi-tenant'
+import path from 'path'
 import sharp from 'sharp'
 
 import Users from './collections/Users'
 import Media from './collections/Media'
 import Categories from './collections/Categories'
 import EmailVerifications from './collections/EmailVerifications'
-import { env } from './config/environment'
 import Products from './collections/Products'
 import Tags from './collections/Tag'
+import Tenants from './collections/Tenant'
 
 
 const filename = fileURLToPath(import.meta.url)
@@ -26,7 +28,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media, Categories, EmailVerifications, Products, Tags],
+  collections: [Users, Media, Categories, EmailVerifications, Products, Tags, Tenants],
   cookiePrefix: 'bizmart',
   editor: lexicalEditor(),
   secret: env.PAYLOAD_SECRET || '',
@@ -39,6 +41,15 @@ export default buildConfig({
   sharp,
   plugins: [
     payloadCloudPlugin(),
+    multiTenantPlugin({
+      collections: {
+        products: {}
+      },
+      tenantsArrayField: {
+        includeDefaultField: false,
+      },
+      userHasAccessToAllTenants: (user) => Boolean(user?.role?.includes("super-admin"))
+    })
     // storage-adapter-placeholder
   ],
 })

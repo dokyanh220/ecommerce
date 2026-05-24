@@ -1868,6 +1868,11 @@
     amazon-cognito-identity-js "^6.1.2"
     nodemailer "7.0.12"
 
+"@payloadcms/plugin-multi-tenant@3.33.0":
+  version "3.33.0"
+  resolved "https://registry.yarnpkg.com/@payloadcms/plugin-multi-tenant/-/plugin-multi-tenant-3.33.0.tgz#4c6fa094f2a5485a37cb7ce16d4a72e865885683"
+  integrity sha512-4E7V1JGrgGge14v/BGGGovI92yM7gmahvCsTcKXZPTDYrv9/0fbTF4i3eTht38YDvwzy+h0oyGEH6jgz1Lesgg==
+
 "@payloadcms/richtext-lexical@^3.58.0":
   version "3.84.1"
   resolved "https://registry.yarnpkg.com/@payloadcms/richtext-lexical/-/richtext-lexical-3.84.1.tgz#56d7470cef4b0668e7df7577233b1dd6f784c61a"
