@@ -1,5 +1,4 @@
-Phần còn lại 
-Product List UI
+Phần còn lại
 Multi Tenancy
 Tenant Pages
 Product Page

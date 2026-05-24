@@ -45,6 +45,18 @@ export const SignInView = () => {
         router.push('/')
       },
       onError: (error) => {
+        const email = form.getValues('email')
+
+        if (
+          error.data?.code == 'FORBIDDEN' ||
+          error.message.toLocaleLowerCase().includes('verify')
+        ) {
+          toast.error('Please verify your email first')
+
+          router.push(`/verify?email=${encodeURIComponent(email)}`)
+          return
+        }
+
         toast.error(error.message)
       }
     })

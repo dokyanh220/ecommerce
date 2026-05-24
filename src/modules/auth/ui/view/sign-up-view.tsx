@@ -67,7 +67,7 @@ export const SignUpView = () => {
     trpc.auth.register.mutationOptions({
       onSuccess: (data) => {
         toast.success('Created account! Please verify email.')
-        router.push(`/verify?email=${encodeURIComponent(form.getValues('email'))}`)
+        router.push(`/verify?email=${encodeURIComponent(data.email)}`)
       },
       onError: (error) => {
         let msg = extractErrorMessage(error.message)

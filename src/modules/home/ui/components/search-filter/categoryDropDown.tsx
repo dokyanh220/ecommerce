@@ -4,7 +4,6 @@ import { useRef, useState } from 'react'
 
 import { cn } from '~/lib/utils'
 import { Button } from '~/components/ui/button'
-import { useDropdownPostion } from './use-dropdown-postion'
 import { SubcategoryMenu } from './subcategoryMenu'
 import Link from 'next/link'
 import { CategoriesGetManyOutput } from '~/modules/categories/server/types'
@@ -30,10 +29,6 @@ export const CategoryDropDown = ({
   }
 
   const onMouseLeave = () => setIsOpen(false)
-
-  const { getDropdownPosition } = useDropdownPostion(dropdownRef)
-
-  const dropdownPosition = getDropdownPosition()
 
   // Hàm để bật tắt dropdown khi click vào button
   // const toggleDropdown = () => {
@@ -78,7 +73,6 @@ export const CategoryDropDown = ({
       <SubcategoryMenu
         category={category}
         isOpen={isOpen}
-        position={dropdownPosition}
       />
     </div>
   )

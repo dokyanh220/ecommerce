@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server"
 import { headers as getHeaders, cookies as getCookies } from "next/headers"
 import { baseProcedure, createTRPCRouter } from "~/trpc/init"
-import { loginSchema, registerSchema, verifySchema } from "../schemas"
+import { loginSchema, registerSchema, resendEmailOtpSchema, verifySchema } from "../schemas"
 import { generateAuthCookie } from "../utils"
 import { generateOtp, hashOtp } from "../otp"
 import { sendVerificationEmail } from "../email"
@@ -9,13 +9,33 @@ import { sendVerificationEmail } from "../email"
 // Biến cấu hình OTP cục bộ, dùng cho register, verifyEmail, resendEmailOtp
 const OTP_EXP_MINUTES = 10
 const MAX_ATTEMPTS = 5
-const RESEND_INTERVAL_SECONDS = 60
+const RESEND_INTERVAL_SECONDS = 45
 const MAX_RESEND_PER_HOUR = 5
 let currentResendCount = 0
-let passwordTemp = ''
 
 // Helper function: Tạo và gửi email OTP
 async function generateSendEmail(ctx: any, userId: string, email: string, resendCount = 0) {
+  if (!userId) {
+    throw new Error('Missing userId')
+  }
+
+  const oldRecords = await ctx.db.find({
+    collection: 'email-verifications',
+    where: {
+      user: { equals: userId }
+    },
+    limit: 10
+  })
+
+  await Promise.all(
+    oldRecords.docs.map((record: any) =>
+      ctx.db.delete({
+        collection: 'email-verifications',
+        id: record.id
+      })
+    )
+  )
+
   // Tạo OTP mới
   const otp = generateOtp(6)
   const codeHash = hashOtp(otp)
@@ -43,24 +63,38 @@ async function generateSendEmail(ctx: any, userId: string, email: string, resend
   }
 }
 
-// Helper function: tách logic login chung
-async function performLogin(ctx: any, email: string, password: string) {
+// Helper function: xác thực email/password với PayloadCMS
+async function authenticateUser(ctx: any, email: string, password: string) {
   // Gọi method login của PayloadCMS để xác thực user
   // PayloadCMS sẽ so sánh email/password với dữ liệu trong DB
-  const data = await ctx.db.login({
-    collection: 'users', // Collection chứa user data
-    data: { email, password }
-  })
+  let data
+  try {
+    data = await ctx.db.login({
+      collection: 'users', // Collection chứa user data
+      data: { email, password }
+    })
+  } catch {
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: "Email or password doesn't correct"
+    })
+  }
 
   // Kiểm tra login có thành công không
   // Nếu thông tin sai, PayloadCMS không trả về token
   if (!data.token) {
     throw new TRPCError({
       code: 'UNAUTHORIZED', // HTTP 401 status
-      message: 'Failed to login' // Thông báo lỗi cho client
+      message: "Email or password doesn't correct" // Thông báo lỗi cho client
     })
   }
 
+  return data
+}
+
+// Helper function: tách logic login chung
+async function performLogin(ctx: any, email: string, password: string) {
+  const data = await authenticateUser(ctx, email, password)
   // API: http://localhost:3000/api/users/login
   
   await generateAuthCookie({
@@ -132,8 +166,6 @@ export const authRouter = createTRPCRouter({
         }
       })
 
-      passwordTemp = input.password
-
       // Thực hiện tạo OTP từ server gửi đến email user để verify sau đó auto login
       // Tạo OTP
       await generateSendEmail(ctx.db, newUser.id, input.email)
@@ -158,7 +190,7 @@ export const authRouter = createTRPCRouter({
       })
       const user = users.docs?.[0]
       if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
-      if (user.active) return { message: 'Already verified', redirect: '/' }
+      if (user.active) return { message: 'Already verified. Please sign in.', redirect: '/sign-in' }
 
       // Lấy record OTP
       const records = await ctx.db.find({
@@ -223,20 +255,14 @@ export const authRouter = createTRPCRouter({
         id: record.id
       })
 
-      // Login tự động sau verify
-      const loginData = await performLogin(ctx, input.email, passwordTemp)
-
-      passwordTemp = ''
-
       return { 
-        message: 'Verified successfully', 
-        redirect: '/',
-        user: loginData.user 
+        message: 'Verified successfully. Please sign in.', 
+        redirect: '/sign-in'
       }
     }),
 
   resendEmailOtp: baseProcedure
-    .input(verifySchema)
+    .input(resendEmailOtpSchema)
     .mutation(async ({input, ctx}) => {
       // Tìm user
       const usersFind = await ctx.db.find({
@@ -265,7 +291,7 @@ export const authRouter = createTRPCRouter({
         if (diffSeconds < RESEND_INTERVAL_SECONDS) {
           throw new TRPCError({
             code: 'TOO_MANY_REQUESTS',
-            message: 'Please wait before resending'
+            message: 'Please wait 1 minutes before resending'
           })
         }
         if ((record.resendCount || 0) >= MAX_RESEND_PER_HOUR) {
@@ -299,14 +325,40 @@ export const authRouter = createTRPCRouter({
         limit: 1
       })
 
-      if (!users?.docs?.length) {
+      const user = users.docs?.[0]
+
+      if (!user) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: "Email or password doesn't correct"
         })
       }
 
-      return await performLogin(ctx, input.email, input.password)
+      if (!user.id) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User id not found'
+        })
+      }
+
+      const loginData = await authenticateUser(ctx, input.email, input.password)
+
+      if (!user.active) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Please verify your email before login',
+          cause: {
+            redirect: `/verify?email=${encodeURIComponent(input.email)}`
+          }
+        })
+      }
+
+      await generateAuthCookie({
+        prefix: ctx.db.config.cookiePrefix,
+        value: loginData.token
+      })
+
+      return loginData
     }),
   
   logout: baseProcedure.mutation(async ({ ctx }) => {

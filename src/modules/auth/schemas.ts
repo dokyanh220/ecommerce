@@ -80,9 +80,9 @@ export const registerSchema = z
   })
   .transform((data) => {
     const countryInfo = countryMap[data.countryCode]!
-    const cleanPhone = data.phone.replace(/\s+/g, "")
-    const fullPhoneNumber = `${data.countryCode}${cleanPhone}`
-    const parsedPhone = parsePhoneNumberFromString(fullPhoneNumber, countryInfo.iso as any)!
+    // const cleanPhone = data.phone.replace(/\s+/g, "")
+    // const fullPhoneNumber = `${data.countryCode}${cleanPhone}`
+    // const parsedPhone = parsePhoneNumberFromString(fullPhoneNumber, countryInfo.iso as any)!
     
     return {
       ...data,
@@ -107,10 +107,14 @@ function getExampleNumber(countryCode: string): string {
 
 export const loginSchema = z.object({
   email: z.string().email(), // Email phải đúng format
-  password: z.string() // Password không cần validate vì đã có trong DB
+  password: z.string().min(1, 'Password is required')
 })
 
 export const verifySchema = z.object({
   email: z.string().email(),
   code: z.string().length(6, "OTP must be 6 digits")
+})
+
+export const resendEmailOtpSchema = z.object({
+  email: z.string().email()
 })

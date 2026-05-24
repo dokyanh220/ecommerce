@@ -5,6 +5,12 @@ const EmailVerifications: CollectionConfig = {
   admin: {
     hidden: true, // Không cần hiển thị trong admin (có thể bỏ nếu muốn debug)
   },
+  access: {
+    read: () => true,
+    create: () => true,
+    update: () => true,
+    delete: () => true,
+  },
   fields: [
     {
       name: 'user', // Reference tới user

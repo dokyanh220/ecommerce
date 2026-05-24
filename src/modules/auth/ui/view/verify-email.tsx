@@ -47,10 +47,17 @@ export const VerifyEmail = () => {
 
   const onSubmit = (values: z.infer<typeof schema>) => {
     if (verifyMutation.isPending) return
+
+    if (!email) {
+      toast.error('Missing email. Please register again.')
+      router.push('/sign-up')
+      return
+    }
+
     verifyMutation.mutate({
       email,
       code: values.code
-    } as any)
+    })
   }
 
   return (
@@ -96,6 +103,11 @@ export const VerifyEmail = () => {
                 disabled={resendMutation.isPending}
                 onClick={() => {
                   if (resendMutation.isPending) return
+                  if (!email) {
+                    toast.error('Missing email. Please register again.')
+                    router.push('/sign-up')
+                    return
+                  }
                   resendMutation.mutate({ email } as any)
                 }}
               >

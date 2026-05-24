@@ -6,6 +6,9 @@ const Users: CollectionConfig = {
     useAsTitle: 'email',
   },
   auth: true,
+  access: {
+    read: () => true,
+  },
   // fields để khai báo các type data của collection
   fields: [
     {
